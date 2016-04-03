@@ -6,7 +6,24 @@ from include.face_landmark_detection import faceLandmarkDetection
 
 #Constant variables
 TRIANGLE_POINTS = list(range(36,61))
+TRACKED_POINTS = (0, 8, 16, 27, 30, 33, 36, 39, 42, 45, 62)
+ALL_POINTS = list(range(0,68))
 DEBUG = False #If True enables the verbose mode
+
+#Antropometric constant values
+# of the human head
+P3D_RIGHT_SIDE = numpy.float32([-100.0, -77.5, -6.0]) #0
+P3D_MENTON = numpy.float32([0.0, 0.0, -133.0]) #8
+P3D_LEFT_SIDE = numpy.float32([-100.0, 77.5, -6.0]) #16
+P3D_SELLION = numpy.float32([0.0, 0.0, 0.0]) #27
+P3D_NOSE = numpy.float32([21.0, 0.0, -48.0]) #30
+P3D_SUB_NOSE = numpy.float32([0.0, 0.0, -60.0]) #33
+P3D_RIGHT_EYE = numpy.float32([-20.0, -65.5,-5.0]) #36
+P3D_RIGHT_TEAR = numpy.float32([-20.0, -40.5,-5.0]) #39
+P3D_LEFT_TEAR = numpy.float32([-20.0, 40.5,-5.0]) #42
+P3D_LEFT_EYE = numpy.float32([-20.0, 65.5,-5.0]) #45
+P3D_STOMION = numpy.float32([10.0, 0.0, -75.0]) #62
+
 
 
 def main():
@@ -18,6 +35,36 @@ def main():
     cam_w = int(video_capture.get(3))
     cam_h = int(video_capture.get(4))
 
+    #Defining the camera matrix
+    #To have better result it is necessary to find the focal
+    # lenght of the camera. fx/fy are the focal lengths (in pixels) 
+    # and cx/cy are the optical centres. These values can be obtained 
+    # roughly by approximation:
+    # cx = 640/2 = 320
+    # cy = 480/2 = 240
+    # fx = fy = cx/tan(60/2 * pi / 180) = 554.26
+    camera_matrix = numpy.float32([[654.26,    0.0,  320],
+                                   [   0.0, 654.26,  240], 
+                                   [   0.0,    0.0,  1.0] ])
+
+    #Distortion coefficients
+    camera_distortion = numpy.float32([-0.25, 0.11, -0.0002, 0, 0])
+
+    #This matrix contains the 3D points of the
+    # 5 landmarks we want to find. It has been
+    # obtained from antrophometric measurement
+    # on the human head.
+    landmark_main_3d_points = numpy.float32([[-100.0, -77.5,   -6.0],
+                                             [   0.0,   0.0, -133.0], 
+                                             [-100.0,  77.5,   -6.0],
+                                             [   0.0,   0.0,    0.0],
+                                             [  21.0,   0.0,  -48.0],
+                                             [   0.0,   0.0,  -60.0],
+                                             [ -20.0, -65.5,   -5.0],
+                                             [ -20.0, -40.5,   -5.0],
+                                             [ -20.0,  40.5,   -5.0],
+                                             [ -20.0,  65.5,   -5.0],
+                                             [  10.0,   0.0,  -75.0]])
     #Declaring the two classifiers
     my_cascade = haarCascade("./etc/haarcascade_frontalface_alt.xml", "./etc/haarcascade_profileface.xml")
     my_detector = faceLandmarkDetection('./etc/shape_predictor_68_face_landmarks.dat')
@@ -110,9 +157,36 @@ def main():
             #In case of a frontal face it
             # is called the landamark detector
             if(my_cascade.face_type == 1):
-                matrixLandmarks = my_detector.returnLandmarks(frame, face_x1, face_y1, face_x2, face_y2)
-                for row in TRIANGLE_POINTS:
-                     cv2.circle(frame,( matrixLandmarks[row].item((0,0)), matrixLandmarks[row].item((0,1)) ), 2, (0,0,255), -1)
+                matrix_landmarks = my_detector.returnLandmarks(frame, face_x1, face_y1, face_x2, face_y2)
+                #for row in TRIANGLE_POINTS:
+                     #cv2.circle(frame,( matrix_landmarks[row].item((0,0)), matrix_landmarks[row].item((0,1)) ), 2, (0,0,255), -1)
+                for row in TRACKED_POINTS:
+                     cv2.circle(frame,( matrix_landmarks[row].item((0,0)), matrix_landmarks[row].item((0,1)) ), 2, (0,0,255), -1)
+
+                #Applying the PnP solver to find the 3D pose
+                # of the head from the 2D position of the
+                # landmarks.
+                # retval - bool
+                # rvec - Output rotation vector (see Rodrigues() ) that, 
+                #  together with tvec , brings points from the model coordinate system to the camera coordinate system.
+                # tvec - Output translation vector.
+                retval, rvec, tvec = cv2.solvePnP(landmark_main_3d_points, my_detector.landmark_main_points, camera_matrix, camera_distortion)
+
+
+                #Now we project the 3D points into the image plane
+                #Creating a 3-axis to be used as reference in the image.
+                axis = numpy.float32([[50,0,0], [0,50,0], [0,0,-50]]).reshape(-1,3)
+                #axis = numpy.float32([[3,0,0], [0,3,0], [0,0,-3]]).reshape(-1,3)
+                imgpts, jac = cv2.projectPoints(axis, rvec, tvec, camera_matrix, camera_distortion)
+
+                #Drawing the three axis on the image frame
+                # the order of the color must be B-G-R otherwise 
+                # the blue axis is covered by the others.
+                cv2.line(frame, my_detector._sellion, tuple(imgpts[2].ravel()), (0,0,255), 5) #BLUE
+                cv2.line(frame, my_detector._sellion, tuple(imgpts[1].ravel()), (0,255,0), 5) #GREEN
+                cv2.line(frame, my_detector._sellion, tuple(imgpts[0].ravel()), (255,0,0), 5) #RED
+
+
 
         #Drawing a yellow rectangle
         # around the ROI.
