@@ -4,11 +4,9 @@ import sys
 from include.haar_cascade import haarCascade
 from include.face_landmark_detection import faceLandmarkDetection
 
-#Constant variables
-TRIANGLE_POINTS = list(range(36,61))
-TRACKED_POINTS = (0, 8, 16, 27, 30, 33, 36, 39, 42, 45, 62)
-ALL_POINTS = list(range(0,68))
-DEBUG = False #If True enables the verbose mode
+
+#If True enables the verbose mode
+DEBUG = True 
 
 #Antropometric constant values
 # of the human head.
@@ -27,6 +25,10 @@ P3D_LEFT_TEAR = numpy.float32([-10.0, 40.5,-5.0]) #42
 P3D_LEFT_EYE = numpy.float32([-20.0, 65.5,-5.0]) #45
 P3D_STOMION = numpy.float32([10.0, 0.0, -75.0]) #62
 
+#The points to draw in debug mode
+TRIANGLE_POINTS = list(range(36,61))
+TRACKED_POINTS = (0, 8, 16, 27, 30, 33, 36, 39, 42, 45, 62)
+ALL_POINTS = list(range(0,68))
 
 
 def main():
@@ -115,8 +117,10 @@ def main():
         # last classifier is sloow. To compensate we
         # increased the scale factor (faster but less
         # accurate).
-        # minsize = 50x50 pixel
-        my_cascade.findFace(gray, True, True, True, 1.10, 1.25, 1.25, 50, 50)
+        # minsize = 40x40 pixel
+        #Return code: 1=Frontal, 2=FrontRotLeft, 
+        # 3=FrontRotRight, 4=ProfileLeft, 5=ProfileRight.
+        my_cascade.findFace(gray, True, True, True, True, 1.10, 1.25, 1.25, 1.25, 40, 40)
 
         #Accumulate error values in a counter
         if(my_cascade.face_type == 0): 
@@ -162,33 +166,37 @@ def main():
             if(DEBUG == True):
                 print("FACE: ", face_x1, face_y1, face_x2, face_y2, face_w, face_h)
                 print("ROI: ", roi_x1, roi_y1, roi_x2, roi_y2, roi_w, roi_h)
-
-            #Drawing a green rectangle
-            # around the detected face.
-            cv2.rectangle(frame, 
-                         (face_x1, face_y1), 
-                         (face_x2, face_y2), 
-                         (0, 255, 0),
-                          2)
+                #Drawing a green rectangle
+                # (and text) around the face.
+                text_x1 = face_x1
+                text_y1 = face_y1 - 3
+                if(text_y1 < 0): text_y1 = 0
+                cv2.putText(frame, "FACE", (text_x1,text_y1), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1);
+                cv2.rectangle(frame, 
+                             (face_x1, face_y1), 
+                             (face_x2, face_y2), 
+                             (0, 255, 0),
+                              2)
 
             #In case of a frontal face it
             # is called the landamark detector
             if(my_cascade.face_type == 1):
                 matrix_landmarks = my_detector.returnLandmarks(frame, face_x1, face_y1, face_x2, face_y2)
-                #for row in TRIANGLE_POINTS:
-                     #cv2.circle(frame,( matrix_landmarks[row].item((0,0)), matrix_landmarks[row].item((0,1)) ), 2, (0,0,255), -1)
-                for row in TRACKED_POINTS:
-                     cv2.circle(frame,( matrix_landmarks[row].item((0,0)), matrix_landmarks[row].item((0,1)) ), 2, (0,0,255), -1)
+
+                if(DEBUG == True):
+                    for row in TRACKED_POINTS:
+                        cv2.circle(frame,( matrix_landmarks[row].item((0,0)), matrix_landmarks[row].item((0,1)) ), 2, (0,0,255), -1)
 
                 #Applying the PnP solver to find the 3D pose
                 # of the head from the 2D position of the
                 # landmarks.
-                # retval - bool
-                # rvec - Output rotation vector (see Rodrigues() ) that, 
-                #  together with tvec , brings points from the model coordinate system to the camera coordinate system.
-                # tvec - Output translation vector.
-                retval, rvec, tvec = cv2.solvePnP(landmark_main_3d_points, my_detector.landmark_main_points, camera_matrix, camera_distortion)
-
+                #retval - bool
+                #rvec - Output rotation vector that, together with tvec, brings 
+                # points from the model coordinate system to the camera coordinate system.
+                #tvec - Output translation vector.
+                retval, rvec, tvec = cv2.solvePnP(landmark_main_3d_points, 
+                                                  my_detector.landmark_main_points, 
+                                                  camera_matrix, camera_distortion)
 
                 #Now we project the 3D points into the image plane
                 #Creating a 3-axis to be used as reference in the image.
@@ -201,17 +209,29 @@ def main():
                 #The opencv colors are defined as BGR colors such as: 
                 # (a, b, c) >> Blue = a, Green = b and Red = c
                 #Our axis/color convention is X=R, Y=G, Z=B
-                cv2.line(frame, my_detector._sellion, tuple(imgpts[1].ravel()), (0,255,0), 5) #GREEN
-                cv2.line(frame, my_detector._sellion, tuple(imgpts[2].ravel()), (255,0,0), 5) #BLUE
-                cv2.line(frame, my_detector._sellion, tuple(imgpts[0].ravel()), (0,0,255), 5) #RED
+                cv2.line(frame, my_detector._sellion, tuple(imgpts[1].ravel()), (0,255,0), 3) #GREEN
+                cv2.line(frame, my_detector._sellion, tuple(imgpts[2].ravel()), (255,0,0), 3) #BLUE
+                cv2.line(frame, my_detector._sellion, tuple(imgpts[0].ravel()), (0,0,255), 3) #RED
 
         #Drawing a yellow rectangle
-        # around the ROI.
-        cv2.rectangle(frame, 
-                    (roi_x1, roi_y1), 
-                    (roi_x2, roi_y2), 
-                    (0, 255, 255),
-                     2)
+        # (and text) around the ROI.
+        if(DEBUG == True):
+            text_x1 = roi_x1
+            text_y1 = roi_y1 - 3
+            if(text_y1 < 0): text_y1 = 0
+            cv2.putText(frame, "ROI", (text_x1,text_y1), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,255), 1);
+            cv2.rectangle(frame, 
+                         (roi_x1, roi_y1), 
+                         (roi_x2, roi_y2), 
+                         (0, 255, 255),
+                         2)
+
+        #TODO remove this function when tested
+        #rows=480
+        #cols = 640
+        #M = cv2.getRotationMatrix2D((cols/2,rows/2),30,1)
+        #dst = cv2.warpAffine(frame, M, (cols,rows))
+        #cv2.imshow('Rotated', dst)
 
         #Showing the frame and waiting
         # for the exit command
