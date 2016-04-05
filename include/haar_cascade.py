@@ -48,8 +48,19 @@ class haarCascade:
     # trained only on left profile.
     # @param inputImg the image where the cascade will be called
     # @param runFrontal if True it looks for frontal faces
+    # @param runFrontalRotated if True it looks for frontal rotated faces
     # @param runLeft if True it looks for left profile faces
     # @param runRight if True it looks for right profile faces
+    # @param frontalScaleFactor=1.1
+    # @param rotatedFrontalScaleFactor=1.1
+    # @param leftScaleFactor=1.1
+    # @param rightScaleFactor=1.1
+    # @param minSizeX=30
+    # @param minSizeX=30
+    # @param rotationAngleCCW (positive) angle for rotated face detector
+    # @param rotationAngleCW (negative) angle for rotated face detector
+    # @param lastFaceType to speed up the chain of classifier it is
+    # possible to specify the first classifier to execute.
     #
     # Return code: 1=Frontal, 2=FrontRotLeft, 3=FronRotRight,
     #              4=ProfileLeft, 5=ProfileRight.
@@ -58,51 +69,64 @@ class haarCascade:
                  runLeft=True, runRight=True, 
                  frontalScaleFactor=1.1, rotatedFrontalScaleFactor=1.1, 
                  leftScaleFactor=1.1, rightScaleFactor=1.1,
-                 minSizeX=30, minSizeY=30):
+                 minSizeX=30, minSizeY=30, rotationAngleCCW=30, rotationAngleCW=-30, lastFaceType=0):
 
-        #Cascade: frontal faces
-        if(runFrontal==True):
-            self._findFrontalFace(inputImg, frontalScaleFactor, minSizeX, minSizeY)
-            if(self.is_face_present == True):
-                self.face_type = 1
-                return (self.face_x, self.face_y, self.face_w, self.face_h)
+        #To speed up the chain we start it
+        # from the last face-type found
+        order = list()
+        if(lastFaceType == 0 or lastFaceType==1): order = (1, 2, 3, 4, 5) 
+        if(lastFaceType == 2): order = (2, 1, 3, 4, 5)
+        if(lastFaceType == 3): order = (3, 1, 2, 4, 5)      
+        if(lastFaceType == 4): order = (4, 1, 2, 3, 5)
+        if(lastFaceType == 5): order = (5, 1, 2, 3, 4)
 
-        #Cascade: frontal faces rotated (Left)
-        if(runFrontalRotated==True):
-            rows, cols = numpy.shape(inputImg)
-            M = cv2.getRotationMatrix2D((cols/2,rows/2),30,1) #30 degrees ccw rotation
-            inputImgRot = cv2.warpAffine(inputImg, M, (cols,rows))
-            self._findFrontalFace(inputImgRot, rotatedFrontalScaleFactor, minSizeX, minSizeY)
-            if(self.is_face_present == True):
-                self.face_type = 2
-                return (self.face_x, self.face_y, self.face_w, self.face_h)
 
-        #Cascade: frontal faces rotated (Right)
-        if(runFrontalRotated==True):
-            rows, cols = numpy.shape(inputImg)
-            M = cv2.getRotationMatrix2D((cols/2,rows/2),-30,1) #30 degrees cw rotation
-            inputImgRot = cv2.warpAffine(inputImg, M, (cols,rows))
-            self._findFrontalFace(inputImgRot, rotatedFrontalScaleFactor, minSizeX, minSizeY)
-            if(self.is_face_present == True):
-                self.face_type = 3
-                return (self.face_x, self.face_y, self.face_w, self.face_h)
+        for position in order:
 
-        #Cascade: left profiles
-        if(runLeft==True):
-            self._findProfileFace(inputImg, leftScaleFactor, minSizeX, minSizeY)
-            if(self.is_face_present == True):
-                self.face_type = 4
-                return (self.face_x, self.face_y, self.face_w, self.face_h)
+            #Cascade: frontal faces
+            if(runFrontal==True and position==1):
+                self._findFrontalFace(inputImg, frontalScaleFactor, minSizeX, minSizeY)
+                if(self.is_face_present == True):
+                    self.face_type = 1
+                    return (self.face_x, self.face_y, self.face_w, self.face_h)
 
-        #Cascade: right profiles
-        if(runRight==True):
-            flipped_inputImg = cv2.flip(inputImg,1) 
-            self._findProfileFace(flipped_inputImg, rightScaleFactor, minSizeX, minSizeY)
-            if(self.is_face_present == True):
-                self.face_type = 5
-                f_w, f_h = flipped_inputImg.shape[::-1] #finding the max dimensions
-                self.face_x = f_w - (self.face_x + self.face_w) #reshape the x to unfold the mirroring
-                return (self.face_x, self.face_y, self.face_w, self.face_h)
+            #Cascade: frontal faces rotated (Left)
+            if(runFrontalRotated==True and position==2):
+                rows, cols = numpy.shape(inputImg)
+                M = cv2.getRotationMatrix2D((cols/2,rows/2),rotationAngleCCW,1) #30 degrees ccw rotation
+                inputImgRot = cv2.warpAffine(inputImg, M, (cols,rows))
+                self._findFrontalFace(inputImgRot, rotatedFrontalScaleFactor, minSizeX, minSizeY)
+                if(self.is_face_present == True):
+                    self.face_type = 2
+                    return (self.face_x, self.face_y, self.face_w, self.face_h)
+
+            #Cascade: frontal faces rotated (Right)
+            if(runFrontalRotated==True and position==3):
+                rows, cols = numpy.shape(inputImg)
+                M = cv2.getRotationMatrix2D((cols/2,rows/2),rotationAngleCW,1) #30 degrees cw rotation
+                inputImgRot = cv2.warpAffine(inputImg, M, (cols,rows))
+                self._findFrontalFace(inputImgRot, rotatedFrontalScaleFactor, minSizeX, minSizeY)
+                if(self.is_face_present == True):
+                    self.face_type = 3
+                    return (self.face_x, self.face_y, self.face_w, self.face_h)
+    
+            #Cascade: left profiles
+            if(runLeft==True and position==4):
+                self._findProfileFace(inputImg, leftScaleFactor, minSizeX, minSizeY)
+                if(self.is_face_present == True):
+                    self.face_type = 4
+                    return (self.face_x, self.face_y, self.face_w, self.face_h)
+
+            #Cascade: right profiles
+            if(runRight==True and position==5):
+                flipped_inputImg = cv2.flip(inputImg,1) 
+                self._findProfileFace(flipped_inputImg, rightScaleFactor, minSizeX, minSizeY)
+                if(self.is_face_present == True):
+                    self.face_type = 5
+                    f_w, f_h = flipped_inputImg.shape[::-1] #finding the max dimensions
+                    self.face_x = f_w - (self.face_x + self.face_w) #reshape the x to unfold the mirroring
+                    return (self.face_x, self.face_y, self.face_w, self.face_h)
+
 
         #It returns zeros if nothing is found
         self.face_type = 0    

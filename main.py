@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import numpy
 import cv2
 import sys
@@ -14,21 +16,28 @@ DEBUG = True
 #The X-Y-Z coordinates used are like the standard
 # coordinates of ROS (robotic operative system)
 P3D_RIGHT_SIDE = numpy.float32([-100.0, -77.5, -5.0]) #0
-P3D_MENTON = numpy.float32([0.0, 0.0, -133.0]) #8
+P3D_GONION_RIGHT = numpy.float32([-110.0, -77.5, -85.0]) #4
+P3D_MENTON = numpy.float32([0.0, 0.0, -122.7]) #8
+P3D_GONION_LEFT = numpy.float32([-110.0, 77.5, -85.0]) #12
 P3D_LEFT_SIDE = numpy.float32([-100.0, 77.5, -5.0]) #16
+P3D_FRONTAL_BREADTH_RIGHT = numpy.float32([-20.0, -56.1, 10.0]) #17
+P3D_FRONTAL_BREADTH_LEFT = numpy.float32([-20.0, 56.1, 10.0]) #26
 P3D_SELLION = numpy.float32([0.0, 0.0, 0.0]) #27
-P3D_NOSE = numpy.float32([21.0, 0.0, -48.0]) #30
-P3D_SUB_NOSE = numpy.float32([5.0, 0.0, -55.0]) #33
+P3D_NOSE = numpy.float32([21.1, 0.0, -48.0]) #30
+P3D_SUB_NOSE = numpy.float32([5.0, 0.0, -52.0]) #33
 P3D_RIGHT_EYE = numpy.float32([-20.0, -65.5,-5.0]) #36
 P3D_RIGHT_TEAR = numpy.float32([-10.0, -40.5,-5.0]) #39
 P3D_LEFT_TEAR = numpy.float32([-10.0, 40.5,-5.0]) #42
 P3D_LEFT_EYE = numpy.float32([-20.0, 65.5,-5.0]) #45
+#P3D_LIP_RIGHT = numpy.float32([-20.0, 65.5,-5.0]) #48
+#P3D_LIP_LEFT = numpy.float32([-20.0, 65.5,-5.0]) #54
 P3D_STOMION = numpy.float32([10.0, 0.0, -75.0]) #62
 
-#The points to draw in debug mode
-TRIANGLE_POINTS = list(range(36,61))
-TRACKED_POINTS = (0, 8, 16, 27, 30, 33, 36, 39, 42, 45, 62)
-ALL_POINTS = list(range(0,68))
+#The points to track
+#These points are the ones used by PnP
+# to estimate the 3D pose of the face
+TRACKED_POINTS = (0, 4, 8, 12, 16, 17, 26, 27, 30, 33, 36, 39, 42, 45, 62)
+ALL_POINTS = list(range(0,68)) #Used for debug only
 
 
 def main():
@@ -41,6 +50,10 @@ def main():
     else:
         print("The video source has been opened correctly...")
 
+    #Create the main window and move it
+    cv2.namedWindow('Video')
+    cv2.moveWindow('Video', 20, 20)
+
     #Obtaining the CAM dimension
     cam_w = int(video_capture.get(3))
     cam_h = int(video_capture.get(4))
@@ -49,33 +62,53 @@ def main():
     #To have better result it is necessary to find the focal
     # lenght of the camera. fx/fy are the focal lengths (in pixels) 
     # and cx/cy are the optical centres. These values can be obtained 
-    # roughly by approximation:
+    # roughly by approximation, for example in a 640x480 camera:
     # cx = 640/2 = 320
     # cy = 480/2 = 240
     # fx = fy = cx/tan(60/2 * pi / 180) = 554.26
-    camera_matrix = numpy.float32([[554.26,    0.0,  320],
-                                   [   0.0, 554.26,  240], 
-                                   [   0.0,    0.0,  1.0] ])
+    c_x = cam_w / 2
+    c_y = cam_h / 2
+    f_x = c_x / numpy.tan(60/2 * numpy.pi / 180)
+    f_y = f_x
+
+    #Estimated camera matrix values.
+    camera_matrix = numpy.float32([[f_x, 0.0, c_x],
+                                   [0.0, f_y, c_y], 
+                                   [0.0, 0.0, 1.0] ])
+
+    print("Estimated camera matrix: \n" + str(camera_matrix) + "\n")
+
+    #These are the camera matrix values estimated with
+    # the calibration code. (see: src/calibration)
+    camera_matrix = numpy.float32([[602.10618226,          0.0, 320.27333589],
+                                   [         0.0, 603.55869786,  229.7537026], 
+                                   [         0.0,          0.0,          1.0] ])
 
     #Distortion coefficients
-    #camera_distortion = numpy.float32([-0.25, 0.11, -0.0002, 0, 0])
-    camera_distortion = numpy.float32([0.0, 0.0, 0.0, 0.0, 0.0])
+    #camera_distortion = numpy.float32([0.0, 0.0, 0.0, 0.0, 0.0])
+    #Distortion coefficients estimated by calibration
+    camera_distortion = numpy.float32([ 0.06232237, -0.41559805,  0.00125389, -0.00402566,  0.04879263])
+
 
     #This matrix contains the 3D points of the
     # 11 landmarks we want to find. It has been
     # obtained from antrophometric measurement
     # on the human head.
-    landmark_main_3d_points = numpy.float32([P3D_RIGHT_SIDE,
-                                             P3D_MENTON, 
-                                             P3D_LEFT_SIDE,
-                                             P3D_SELLION,
-                                             P3D_NOSE,
-                                             P3D_SUB_NOSE,
-                                             P3D_RIGHT_EYE,
-                                             P3D_RIGHT_TEAR,
-                                             P3D_LEFT_TEAR,
-                                             P3D_LEFT_EYE,
-                                             P3D_STOMION])
+    landmarks_3D = numpy.float32([P3D_RIGHT_SIDE,
+                                  P3D_GONION_RIGHT,
+                                  P3D_MENTON,
+                                  P3D_GONION_LEFT,
+                                  P3D_LEFT_SIDE,
+                                  P3D_FRONTAL_BREADTH_RIGHT,
+                                  P3D_FRONTAL_BREADTH_LEFT,
+                                  P3D_SELLION,
+                                  P3D_NOSE,
+                                  P3D_SUB_NOSE,
+                                  P3D_RIGHT_EYE,
+                                  P3D_RIGHT_TEAR,
+                                  P3D_LEFT_TEAR,
+                                  P3D_LEFT_EYE,
+                                  P3D_STOMION])
 
     #Declaring the two classifiers
     my_cascade = haarCascade("./etc/haarcascade_frontalface_alt.xml", "./etc/haarcascade_profileface.xml")
@@ -120,7 +153,7 @@ def main():
         # minsize = 40x40 pixel
         #Return code: 1=Frontal, 2=FrontRotLeft, 
         # 3=FrontRotRight, 4=ProfileLeft, 5=ProfileRight.
-        my_cascade.findFace(gray, True, True, True, True, 1.10, 1.25, 1.25, 1.25, 40, 40)
+        my_cascade.findFace(gray, True, True, True, True, 1.10, 1.25, 1.25, 1.25, 60, 60, rotationAngleCCW=25, rotationAngleCW=-25, lastFaceType=my_cascade.face_type)
 
         #Accumulate error values in a counter
         if(my_cascade.face_type == 0): 
@@ -139,6 +172,9 @@ def main():
 
         #Checking wich kind of face it is returned
         if(my_cascade.face_type > 0):
+
+            #Face found, reset the error counter
+            no_face_counter = 0
 
             #Updating the face position
             face_x1 = my_cascade.face_x + roi_x1
@@ -178,14 +214,17 @@ def main():
                              (0, 255, 0),
                               2)
 
-            #In case of a frontal face it
+            #In case of a frontal/rotated face it
             # is called the landamark detector
-            if(my_cascade.face_type == 1):
-                matrix_landmarks = my_detector.returnLandmarks(frame, face_x1, face_y1, face_x2, face_y2)
+            if(my_cascade.face_type > 0 and my_cascade.face_type < 4):
+                landmarks_2D = my_detector.returnLandmarks(frame, face_x1, face_y1, face_x2, face_y2, points_to_return=TRACKED_POINTS)
 
                 if(DEBUG == True):
-                    for row in TRACKED_POINTS:
-                        cv2.circle(frame,( matrix_landmarks[row].item((0,0)), matrix_landmarks[row].item((0,1)) ), 2, (0,0,255), -1)
+                    #cv2.drawKeypoints(frame, landmarks_2D)
+
+                    for point in landmarks_2D:
+                        cv2.circle(frame,( point[0], point[1] ), 2, (0,0,255), -1)
+
 
                 #Applying the PnP solver to find the 3D pose
                 # of the head from the 2D position of the
@@ -194,8 +233,8 @@ def main():
                 #rvec - Output rotation vector that, together with tvec, brings 
                 # points from the model coordinate system to the camera coordinate system.
                 #tvec - Output translation vector.
-                retval, rvec, tvec = cv2.solvePnP(landmark_main_3d_points, 
-                                                  my_detector.landmark_main_points, 
+                retval, rvec, tvec = cv2.solvePnP(landmarks_3D, 
+                                                  landmarks_2D, 
                                                   camera_matrix, camera_distortion)
 
                 #Now we project the 3D points into the image plane
@@ -209,9 +248,10 @@ def main():
                 #The opencv colors are defined as BGR colors such as: 
                 # (a, b, c) >> Blue = a, Green = b and Red = c
                 #Our axis/color convention is X=R, Y=G, Z=B
-                cv2.line(frame, my_detector._sellion, tuple(imgpts[1].ravel()), (0,255,0), 3) #GREEN
-                cv2.line(frame, my_detector._sellion, tuple(imgpts[2].ravel()), (255,0,0), 3) #BLUE
-                cv2.line(frame, my_detector._sellion, tuple(imgpts[0].ravel()), (0,0,255), 3) #RED
+                sellion_xy = (landmarks_2D[7][0], landmarks_2D[7][1])
+                cv2.line(frame, sellion_xy, tuple(imgpts[1].ravel()), (0,255,0), 3) #GREEN
+                cv2.line(frame, sellion_xy, tuple(imgpts[2].ravel()), (255,0,0), 3) #BLUE
+                cv2.line(frame, sellion_xy, tuple(imgpts[0].ravel()), (0,0,255), 3) #RED
 
         #Drawing a yellow rectangle
         # (and text) around the ROI.
@@ -225,13 +265,6 @@ def main():
                          (roi_x2, roi_y2), 
                          (0, 255, 255),
                          2)
-
-        #TODO remove this function when tested
-        #rows=480
-        #cols = 640
-        #M = cv2.getRotationMatrix2D((cols/2,rows/2),30,1)
-        #dst = cv2.warpAffine(frame, M, (cols,rows))
-        #cv2.imshow('Rotated', dst)
 
         #Showing the frame and waiting
         # for the exit command

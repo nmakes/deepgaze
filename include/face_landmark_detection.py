@@ -13,6 +13,18 @@ import cv2
 import dlib
 import os.path
 
+RIGHT_SIDE = 0
+MENTON = 8
+LEFT_SIDE = 16
+SELLION = 27
+NOSE = 30
+SUB_NOSE = 33
+RIGHT_EYE = 36
+RIGHT_TEAR = 39
+LEFT_TEAR = 42
+LEFT_EYE = 45
+STOMION = 62
+
 
 class faceLandmarkDetection:
 
@@ -24,56 +36,34 @@ class faceLandmarkDetection:
 
         self._predictor = dlib.shape_predictor(landmarkPath)
 
-        #The feature points important
-        # for the 3D tracking
-        self._side_right = (0, 0) #0
-        self._menton =  (0, 0) #8
-        self._side_left = (0, 0) #16
-        self._sellion = (0, 0) #27
-        self._nose = (0, 0) #30
-        #self._philtrum = (0, 0) #51
-
-
 
     ##
     # Find landmarks in the image provided
     # @param inputImg the image where the algorithm will be called
     #
-    def returnLandmarks(self, inputImg, roiX, roiY, roiW, roiH):
+    def returnLandmarks(self, inputImg, roiX, roiY, roiW, roiH, points_to_return=range(0,68)):
             #Creating a dlib rectangle and finding the landmarks
             dlib_rectangle = dlib.rectangle(left=int(roiX), top=int(roiY), right=int(roiW), bottom=int(roiH))
-            landmarks = self._predictor(inputImg, dlib_rectangle)
-            #It creates a numpy.matrix containing x-y coordinates of the 68 landmarks found by the predictor
-            self._landmark_matrix = numpy.matrix([[p.x, p.y] for p in landmarks.parts()])
+            dlib_landmarks = self._predictor(inputImg, dlib_rectangle)
 
-            self._nose = ( self._landmark_matrix[30].item((0,0)), self._landmark_matrix[30].item((0,1)) )
-            self._sellion = ( self._landmark_matrix[27].item((0,0)), self._landmark_matrix[27].item((0,1)) )
-            self._menton = self._landmark_matrix[8]
-            #self._philtrum = self._landmark_matrix[51]
-            self._side_left = self._landmark_matrix[16] 
-            self._side_right = self._landmark_matrix[0]
-
-
-            #These points are the one that have a correspondece
-            # in the 3D space, because their data have been found
-            # from antropometric tables. They will be used by solvePnP().
-            self.landmark_main_points = numpy.float32([[self._landmark_matrix[0].item((0,0)),  self._landmark_matrix[0].item((0,1)) ],
-                                                       [self._landmark_matrix[8].item((0,0)),  self._landmark_matrix[8].item((0,1)) ], 
-                                                       [self._landmark_matrix[16].item((0,0)), self._landmark_matrix[16].item((0,1))],
-                                                       [self._landmark_matrix[27].item((0,0)), self._landmark_matrix[27].item((0,1))],
-                                                       [self._landmark_matrix[30].item((0,0)), self._landmark_matrix[30].item((0,1))],
-                                                       [self._landmark_matrix[33].item((0,0)), self._landmark_matrix[33].item((0,1))],
-                                                       [self._landmark_matrix[36].item((0,0)), self._landmark_matrix[36].item((0,1))],
-                                                       [self._landmark_matrix[39].item((0,0)), self._landmark_matrix[39].item((0,1))],
-                                                       [self._landmark_matrix[42].item((0,0)), self._landmark_matrix[42].item((0,1))],
-                                                       [self._landmark_matrix[45].item((0,0)), self._landmark_matrix[45].item((0,1))],
-                                                       [self._landmark_matrix[62].item((0,0)), self._landmark_matrix[62].item((0,1))]])
-            return self._landmark_matrix
+            #It selects only the landmarks that
+            # have been indicated in the input parameter "points_to_return".
+            #It can be used in solvePnP() to estimate the 3D pose.
+            self._landmarks = numpy.zeros((len(points_to_return),2), dtype=numpy.float32)
+            counter = 0
+            for point in points_to_return:
+                self._landmarks[counter] = [dlib_landmarks.parts()[point].x, dlib_landmarks.parts()[point].y]
+                counter += 1
 
 
-    def print_landmark_coords(self):
-        print("NOSE: ", self._nose)
-        #print("SELLION: ", self._sellion)
+            #Estimation of the eye dimesnion
+            #self._right_eye_w = self._landmark_matrix[RIGHT_TEAR].item((0,0)) - self._landmark_matrix[RIGHT_EYE].item((0,0)) 
+            #self._left_eye_w = self._landmark_matrix[LEFT_EYE].item((0,0)) - self._landmark_matrix[LEFT_TEAR].item((0,0))
+
+
+            return self._landmarks
+
+
 
 
 
