@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+##
+# Massimiliano Patacchiola, Plymouth University 2016
+#
+# This is an example of head pose estimation with solvePnP
+#
+
 import numpy
 import cv2
 import sys
