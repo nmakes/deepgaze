@@ -10,8 +10,10 @@ from include.face_landmark_detection import faceLandmarkDetection
 #If True enables the verbose mode
 DEBUG = True 
 
-#Antropometric constant values
-# of the human head.
+#Antropometric constant values of the human head. 
+#Found on wikipedia and on:
+# "Head-and-Face Anthropometric Survey of U.S. Respirator Users"
+#
 #X-Y-Z with X pointing forward and Y on the left.
 #The X-Y-Z coordinates used are like the standard
 # coordinates of ROS (robotic operative system)
@@ -58,7 +60,7 @@ def main():
     cam_w = int(video_capture.get(3))
     cam_h = int(video_capture.get(4))
 
-    #Defining the camera matrix
+    #Defining the camera matrix.
     #To have better result it is necessary to find the focal
     # lenght of the camera. fx/fy are the focal lengths (in pixels) 
     # and cx/cy are the optical centres. These values can be obtained 
@@ -78,14 +80,15 @@ def main():
 
     print("Estimated camera matrix: \n" + str(camera_matrix) + "\n")
 
-    #These are the camera matrix values estimated with
-    # the calibration code. (see: src/calibration)
+    #These are the camera matrix values estimated on my webcam with
+    # the calibration code (see: src/calibration):
     camera_matrix = numpy.float32([[602.10618226,          0.0, 320.27333589],
                                    [         0.0, 603.55869786,  229.7537026], 
                                    [         0.0,          0.0,          1.0] ])
 
     #Distortion coefficients
     #camera_distortion = numpy.float32([0.0, 0.0, 0.0, 0.0, 0.0])
+
     #Distortion coefficients estimated by calibration
     camera_distortion = numpy.float32([ 0.06232237, -0.41559805,  0.00125389, -0.00402566,  0.04879263])
 
@@ -144,16 +147,17 @@ def main():
         gray = cv2.cvtColor(frame[roi_y1:roi_y2, roi_x1:roi_x2], cv2.COLOR_BGR2GRAY)
 
         #Looking for faces with cascade
+        #The classifier moves over the ROI
+        # starting from a minimum dimension and augmentig
+        # slightly based on the scale factor parameter.
         #The scale factor for the frontal face is 1.10 (10%)
-        #Scale factor left=1.15 and right=1.25 (25% and 25%)
-        #Because the chain is: frontal>left>right the
-        # last classifier is sloow. To compensate we
-        # increased the scale factor (faster but less
-        # accurate).
-        # minsize = 40x40 pixel
+        #Scale factor: 1.15=15%,1.25=25% ...ecc
+        #Higher scale factors means faster classification
+        #  but lower accuracy.
+        #
         #Return code: 1=Frontal, 2=FrontRotLeft, 
         # 3=FrontRotRight, 4=ProfileLeft, 5=ProfileRight.
-        my_cascade.findFace(gray, True, True, True, True, 1.10, 1.25, 1.25, 1.25, 60, 60, rotationAngleCCW=25, rotationAngleCW=-25, lastFaceType=my_cascade.face_type)
+        my_cascade.findFace(gray, True, True, True, True, 1.10, 1.10, 1.15, 1.15, 40, 40, rotationAngleCCW=30, rotationAngleCW=-30, lastFaceType=my_cascade.face_type)
 
         #Accumulate error values in a counter
         if(my_cascade.face_type == 0): 
