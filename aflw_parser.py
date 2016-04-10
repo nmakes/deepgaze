@@ -103,11 +103,11 @@ print("Rescaling the label values from radians to range -1/+1")
 
 #Min-Max scaling of the label
 #Roll
-label[:,0] /= numpy.pi #pi radians correspond to 180 degree
+label[:,0] /= (numpy.pi/2) #pi/2 radians correspond to 90 degree
 #Pitch
 label[:,1] /= (numpy.pi/2) #pi/2 radians are 90 degree
 #Yaw
-label[:,2] /= numpy.pi #pi radians correspond to 180 degree
+label[:,2] /= (numpy.pi/2) #pi/2 radians correspond to 90 degree
 
 #Roll
 max_roll = numpy.amax(label[:,0])
@@ -140,14 +140,17 @@ label = data[:,1600:1603]
 
 #Creating the training, validation, test datasets
 #Training dataset is 60% of the total
-training_dataset = numpy.copy(dataset[0:15000,:])  #14542 = ~60% of 24237
-training_label = numpy.copy(label[0:15000,:]) 
-#Validation dataset is 20% of the total
-validation_dataset = numpy.copy(dataset[15000:20000,:]) #15000:20000 = ~20% of 24237
-validation_label = numpy.copy(label[15000:20000,:])
-#Test dataset is 20% of the total
-test_dataset = numpy.copy(dataset[20000:24237,:]) #20000:24237 = 20% of 24237
-test_label = numpy.copy(label[20000:24237,:])
+row, col = dataset.shape
+cut_80 = int(row * 0.8) #take 80% of the total
+cut_10 = (row - cut_80)/2 #split the remaining 20%
+training_dataset = numpy.copy(dataset[0:cut_80,:]) 
+training_label = numpy.copy(label[0:cut_80,:]) 
+#Validation dataset is 10% of the total
+validation_dataset = numpy.copy(dataset[cut_80:cut_80+cut_10,:])
+validation_label = numpy.copy(label[cut_80:cut_80+cut_10,:])
+#Test dataset is 10% of the total
+test_dataset = numpy.copy(dataset[cut_80+cut_10:row,:])
+test_label = numpy.copy(label[cut_80+cut_10:row,:])
 
 #saving the sanitized dataset in a pickle file
 pickle_file = 'aflw_dataset.pickle'
