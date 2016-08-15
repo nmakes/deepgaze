@@ -1,4 +1,4 @@
-from include.bayes_filter import DiscreteBayesFilter
+from deepgaze.bayes_filter import DiscreteBayesFilter
 import numpy as np
 
 
