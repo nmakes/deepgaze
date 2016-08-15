@@ -1,6 +1,6 @@
 What is deepgaze?
 ----------
-Deepgaze is a library which uses Convolutional Neural Networks (CNNs) to estimate the Focus of Attention (FOA) of users. The FOA can be approximately estimated finding the head orientation. This is particularly useful when the eyes are covered, or when the user is to far from the camera to grab the eye region with a good resolution. When the eye region is visible it is possible to estimate the gaze direction, which is much more informative and can give a good indication of the FOA.
+Deepgaze is a library which uses Convolutional Neural Networks (CNNs) to estimate the Focus of Attention (FOA) of users. The FOA can be approximately estimated finding the head orientation. This is particularly useful when the eyes are covered, or when the user is too far from the camera to grab the eye region with a good resolution. When the eye region is visible it is possible to estimate the gaze direction, which is much more informative and can give a good indication of the FOA.
 
 **Update 15/08/2016**:
 Work in progress. The code provided at the moment does not still implement gaze detection. There is an example for using the OpenCV solvePnP method to estimate the head orientation [[code]](./examples/ex_pnp_head_pose_estimation.py). The code for head pose estimation with CNN will be available in September, and the code for gaze estimation before the end of the year.
