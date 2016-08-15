@@ -3,14 +3,15 @@
 ##
 # Massimiliano Patacchiola, Plymouth University 2016
 #
-# This is an example of head pose estimation with solvePnP
+# This is an example of head pose estimation with solvePnP.
+# It uses the dlib library and openCV
 #
 
 import numpy
 import cv2
 import sys
-from include.haar_cascade import haarCascade
-from include.face_landmark_detection import faceLandmarkDetection
+from deepgaze.haar_cascade import haarCascade
+from deepgaze.face_landmark_detection import faceLandmarkDetection
 
 
 #If True enables the verbose mode
@@ -127,7 +128,7 @@ def main():
     no_face_counter = 0
 
     #Variables that identify the face
-    # position in the main frame.
+    #position in the main frame.
     face_x1 = 0
     face_y1 = 0
     face_x2 = 0
@@ -136,7 +137,7 @@ def main():
     face_h = 0
 
     #Variables that identify the ROI
-    # position in the main frame.
+    #position in the main frame.
     roi_x1 = 0
     roi_y1 = 0
     roi_x2 = cam_w
@@ -154,12 +155,12 @@ def main():
 
         #Looking for faces with cascade
         #The classifier moves over the ROI
-        # starting from a minimum dimension and augmentig
-        # slightly based on the scale factor parameter.
+        #starting from a minimum dimension and augmentig
+        #slightly based on the scale factor parameter.
         #The scale factor for the frontal face is 1.10 (10%)
         #Scale factor: 1.15=15%,1.25=25% ...ecc
         #Higher scale factors means faster classification
-        #  but lower accuracy.
+        #but lower accuracy.
         #
         #Return code: 1=Frontal, 2=FrontRotLeft, 
         # 3=FrontRotRight, 4=ProfileLeft, 5=ProfileRight.
@@ -170,7 +171,7 @@ def main():
             no_face_counter += 1
 
         #If any face is found for a certain
-        # number of cycles, then the ROI is reset
+        #number of cycles, then the ROI is reset
         if(no_face_counter == 50):
             no_face_counter = 0
             roi_x1 = 0
@@ -186,13 +187,41 @@ def main():
             #Face found, reset the error counter
             no_face_counter = 0
 
+            #Because the dlib landmark detector wants a precise
+            #boundary box of the face, it is necessary to resize
+            #the box returned by the OpenCV haar detector.
+            #Adjusting the frame for profile left
+            if(my_cascade.face_type == 4):
+                face_margin_x1 = 20 - 10 #resize_rate + shift_rate
+                face_margin_y1 = 20 + 5 #resize_rate + shift_rate
+                face_margin_x2 = -20 - 10 #resize_rate + shift_rate
+                face_margin_y2 = -20 + 5 #resize_rate + shift_rate
+                face_margin_h = -0.7 #resize_factor
+                face_margin_w = -0.7 #resize_factor
+            #Adjusting the frame for profile right
+            elif(my_cascade.face_type == 5):
+                face_margin_x1 = 20 + 10
+                face_margin_y1 = 20 + 5
+                face_margin_x2 = -20 + 10
+                face_margin_y2 = -20 + 5
+                face_margin_h = -0.7
+                face_margin_w = -0.7
+            #No adjustments
+            else:
+                face_margin_x1 = 0
+                face_margin_y1 = 0
+                face_margin_x2 = 0
+                face_margin_y2 = 0
+                face_margin_h = 0
+                face_margin_w = 0
+
             #Updating the face position
-            face_x1 = my_cascade.face_x + roi_x1
-            face_y1 = my_cascade.face_y + roi_y1
-            face_x2 = my_cascade.face_x + my_cascade.face_w + roi_x1
-            face_y2 = my_cascade.face_y + my_cascade.face_h + roi_y1
-            face_w = my_cascade.face_w
-            face_h = my_cascade.face_h
+            face_x1 = my_cascade.face_x + roi_x1 + face_margin_x1
+            face_y1 = my_cascade.face_y + roi_y1 + face_margin_y1
+            face_x2 = my_cascade.face_x + my_cascade.face_w + roi_x1 + face_margin_x2
+            face_y2 = my_cascade.face_y + my_cascade.face_h + roi_y1 + face_margin_y2
+            face_w = my_cascade.face_w + int(my_cascade.face_w * face_margin_w)
+            face_h = my_cascade.face_h + int(my_cascade.face_h * face_margin_h)
 
             #Updating the ROI position       
             roi_x1 = face_x1 - roi_resize_w
@@ -226,7 +255,7 @@ def main():
 
             #In case of a frontal/rotated face it
             # is called the landamark detector
-            if(my_cascade.face_type > 0 and my_cascade.face_type < 4):
+            if(my_cascade.face_type > 0):
                 landmarks_2D = my_detector.returnLandmarks(frame, face_x1, face_y1, face_x2, face_y2, points_to_return=TRACKED_POINTS)
 
                 if(DEBUG == True):
