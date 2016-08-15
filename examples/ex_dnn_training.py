@@ -1,10 +1,24 @@
+#!/usr/bin/env python
+
+##
+# Massimiliano Patacchiola, Plymouth University 2016
+#
+# In this example I show you how to train a Deep Neural Network (DNN)
+# for the head pose estimation. It requires a pickle file containing
+# some numpy matrix, representing the images and the labels necessary
+# for the training (see ex_aflw_parser.py). I cannot add the pickle file 
+# here because the AFLW dataset has a license which not allow to further  
+# copy, publish or distribute any portion of the AFLW database.
+# Go on the original website and ask for a free registration to have it:
+# https://lrs.icg.tugraz.at/research/aflw/
+
+
 # These are all the modules we'll be using later. Make sure you can import them
 # before proceeding further.
 from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 from six.moves import cPickle as pickle
-from sklearn.metrics import r2_score
 
 #Load the standard file
 pickle_file = 'aflw_dataset.pickle'
@@ -130,7 +144,6 @@ batch_size = 128 #was 128
 graph = tf.Graph()
 with graph.as_default():
  
-    print("Testing the model with Dropout...")
     print("Start...")
     
     # Variables
@@ -241,15 +254,4 @@ with tf.Session(graph=graph) as session:
   saver.save(session, './etc/tensorflow/dnn_1600i_4h_3o', global_step=step) #save the session    
   print("# Test accuracy: " + str(accuracy(test_prediction.eval(), test_label)))
   final_test(test_prediction.eval(), test_label)
-
-
-
-
-
-
-
-
-
-
-
 
