@@ -3,14 +3,22 @@
 ##
 # Massimiliano Patacchiola, Plymouth University 2016
 #
-# This file loads two numpy files (dataset.npy and label.npy).
+# File with a parser for the Tugraz "Annotated Facial Landmarks in the Wild" dataset.
+# https://lrs.icg.tugraz.at/research/aflw/
+#
+# I wrote a python code to access the sqlite database, it can be found on the  official
+# page of the dataset (it requires free registration):
+# https://lrs.icg.tugraz.at/research/aflw/downloads.php
+# 
+# This file loads two numpy files (dataset.npy and label.npy), which
+# must be created in advance.
 # If the files are not found the script looks for a folder with
 # the picture to load and the csv file containing: 
 # image_name, roll, pitch, yaw 
 #
 # The two numpy files contain:
-# dataset.npy: the images of the dataset in a 40x40 format
-#  arranged in in a matrix of shape=(tot_imgs,40*40)
+# dataset.npy: the images of the dataset in a 64x64 format
+#  arranged in in a matrix of shape=(tot_imgs,64*64)
 # label.npy: the roll,pitch,yaw data of the face 
 #  arranged in a matrix of shape=(tot_imgs, 3)
 #
@@ -48,7 +56,7 @@ if(os.path.isfile(label_npy_path)==False or os.path.isfile(dataset_npy_path)==Fa
     print(label[5][:])
 
     dataset_row = label_row
-    dataset_col = 40 * 40 #the size of the image
+    dataset_col = 64 * 64 #the size of the image
     dataset = numpy.zeros((dataset_row, dataset_col), dtype=numpy.int8)
 
     row_counter = 0
