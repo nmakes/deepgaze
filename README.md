@@ -54,3 +54,17 @@ python setup.py install
 ```
 
 Done! Now give a look to the examples folder.
+
+Examples
+--------
+
+- Head Pose Estimation using the Perspective-n-Point algorithm in OpenCV [[code]](./examples/ex_pnp_head_pose_estimation_webcam.py) [[video]](https://www.youtube.com/watch?v=OSnI18XmAg4)
+
+
+
+
+
+
+
+
+
