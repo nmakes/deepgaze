@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+#The MIT License (MIT)
+#Copyright (c) 2016 Massimiliano Patacchiola
+#
+#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF #MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY #CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE #SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 import numpy as np
 import tensorflow as tf
 import cv2
@@ -8,6 +13,15 @@ import os.path
 DEBUG = False
 
 class CnnHeadPoseEstimator:
+    """ Head pose estimation class which uses convolutional neural network
+
+        It finds Roll, Pitch and Yaw of the head given an head figure as input.
+        It manages input (colour) picture larger than 64x64 pixels. The CNN are robust
+        to variance in the input features and can handle occlusions and bad
+        lighting conditions. The output values are in the ranges (degrees): 
+        ROLL=[-40, +40]
+        YAW=[-100, +100] 
+    """
 
     def __init__(self, tf_session):
         """ Init the class
@@ -29,8 +43,11 @@ class CnnHeadPoseEstimator:
 
 
     def load_yaw_variables(self, YawFilePath):
-        """ Load varibles from a checkpoint file
+        """ Load varibles from a tensorflow file
 
+        It must be called after the variable allocation.
+        This function take the variables stored in a local file
+        and assign them to pre-allocated variables.      
         @param YawFilePath Path to a valid checkpoint
         """
 
@@ -41,7 +58,7 @@ class CnnHeadPoseEstimator:
         #For future use, allocating a fraction of the GPU
         #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5) #Allocate only half of the GPU memory
 
-        if(os.path.isfile(YawFilePath)==False): raise ValueError('[DEEPGAZE] CnnHeadPoseEstimator: the yaw file path is incorrect.')
+        if(os.path.isfile(YawFilePath)==False): raise ValueError('[DEEPGAZE] CnnHeadPoseEstimator(load_yaw_variables): the yaw file path is incorrect.')
 
         tf.train.Saver(({"conv1_yaw_w": self.hy_conv1_weights, "conv1_yaw_b": self.hy_conv1_biases,
                          "conv2_yaw_w": self.hy_conv2_weights, "conv2_yaw_b": self.hy_conv2_biases,
@@ -53,7 +70,10 @@ class CnnHeadPoseEstimator:
  
     def allocate_yaw_variables(self):
         """ Allocate variables in memory
-
+            
+        The variables must be allocated in memory before loading
+        the pretrained weights. In this phase empty placeholders
+        are defined and later fill with the real values.
         """
         self._num_labels = 1
         # Input data [batch_size, image_size, image_size, channels]
@@ -145,10 +165,11 @@ class CnnHeadPoseEstimator:
         self.cnn_output = model(self.tf_yaw_input_vector)
  
 
-    def return_yaw(self, image):
+    def return_yaw(self, image, radians=False):
          """ Return the yaw angle associated with the input image.
 
-         @param image It is a colour image. It must be >= 64 pixel
+         @param image It is a colour image. It must be >= 64 pixel.
+         @param radians When True it returns the angle in radians, otherwise in degrees.
          """
          #Uncomment if you want to see the image
          #cv2.imshow('image',image)
@@ -162,7 +183,8 @@ class CnnHeadPoseEstimator:
              yaw_raw = self._sess.run([self.cnn_output], feed_dict=feed_dict)
              yaw_vector = np.multiply(yaw_raw, 100.0)
              #yaw = yaw_raw #* 100 #cnn out is in range [-1, +1] --> [-100, + 100]
-             return yaw_vector
+             if(radians==True): return np.multiply(yaw_vector, np.pi/180.0) #to radians
+             else: return yaw_vector
          #If the image is > 64 pixel then resize it
          if(h == w and h>64 and d==3):
              image_resized = cv2.resize(image, (64, 64), interpolation = cv2.INTER_AREA)
@@ -170,13 +192,14 @@ class CnnHeadPoseEstimator:
              feed_dict = {self.tf_yaw_input_vector : image_normalised}
              yaw_raw = self._sess.run([self.cnn_output], feed_dict=feed_dict)       
              yaw_vector = np.multiply(yaw_raw, 100.0) #cnn-out is in range [-1, +1] --> [-100, + 100]
-             return yaw_vector
+             if(radians==True): return np.multiply(yaw_vector, np.pi/180.0) #to radians
+             else: return yaw_vector
          #wrong shape          
          if(h != w or w<64 or h<64):
-             raise ValueError('[DEEPGAZE] CnnHeadPoseEstimator: the image given as input has wrong shape. Height and Width must be >= 64 pixel')
+             raise ValueError('[DEEPGAZE] CnnHeadPoseEstimator(return_yaw): the image given as input has wrong shape. Height and Width must be >= 64 pixel')
          #wrong number of channels
          if(d!=3):
-             raise ValueError('[DEEPGAZE] CnnHeadPoseEstimator: the image given as input does not have 3 channels, this function accepts only colour images.')
+             raise ValueError('[DEEPGAZE] CnnHeadPoseEstimator(return_yaw): the image given as input does not have 3 channels, this function accepts only colour images.')
 
 
 
