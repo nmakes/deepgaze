@@ -5,6 +5,9 @@ Deepgaze is a library which uses **Convolutional Neural Networks** (CNNs) to est
 This library is the result of my recent work which is under submission:
 *Head Pose Estimation in the Wild using Convolutional Neural Networks and Adaptive Gradient Methods*
 
+**Update 5/10/2016**:
+There is a working example on how to use CNNs for head pose estimation (for the moment only yaw angle) [[code]](./examples/ex_cnn_headp_pose_estimation_images/ex_cnn_head_pose_estimation_images.py)
+
 **Update 20/09/2016**:
 Work in progress. The code provided at the moment does not still implement gaze detection. There is a beta version of the class which implements the CNN head pose estimator of the yaw angle [[code]](https://github.com/mpatacchiola/deepgaze/blob/master/deepgaze/head_pose_estimation.py). You can use it loading the variables stored in this [[file]](https://github.com/mpatacchiola/deepgaze/blob/master/etc/tensorflow/head_pose/yaw/cnn_cccdd_30k).
 
