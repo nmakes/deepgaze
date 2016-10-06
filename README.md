@@ -70,6 +70,12 @@ Examples
 
 - Head Pose Estimation in-the-wild using Perspective-n-Point and dlib face detector [[code]](./examples/ex_dlib_pnp_head_pose_estimation_video.py) [[video]](https://www.youtube.com/watch?v=xurEs0G9ARs)
 
+- Head Pose Estimation in images using Convolutional Neural Networks [[code]](./examples/ex_cnn_headp_pose_estimation_images/ex_cnn_head_pose_estimation_images.py)
+
+<p align="center">
+<img src="doc/images/ex_cnn_head_pose_estimation_images.png">
+</p>
+
 
 Acknowledgments
 ---------------
