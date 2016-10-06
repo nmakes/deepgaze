@@ -73,7 +73,7 @@ Examples
 - Head Pose Estimation in images using Convolutional Neural Networks [[code]](./examples/ex_cnn_headp_pose_estimation_images/ex_cnn_head_pose_estimation_images.py)
 
 <p align="center">
-<img src="doc/images/ex_cnn_head_pose_estimation_images.png">
+<img src="doc/images/ex_cnn_head_pose_estimation_images.png" width="80%" height="80%">
 </p>
 
 
