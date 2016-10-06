@@ -58,7 +58,13 @@ git clone https://github.com/mpatacchiola/deepgaze.git
 To install the package you have to run the setup.py script (it may require root privileges):
 
 ```shell
-python setup.py install
+sudo python setup.py install
+```
+
+If you want to track all the installed files you can record the installation process in a text file:
+
+```shell
+sudo python setup.py install --record record.txt
 ```
 
 Done! Now give a look to the examples folder.
