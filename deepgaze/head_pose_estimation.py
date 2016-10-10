@@ -311,7 +311,10 @@ class PnpHeadPoseEstimator:
          #The X-Y-Z coordinates used are like the standard
          # coordinates of ROS (robotic operative system)
          #OpenCV uses the reference usually used in computer vision: 
-         #X points to the right, Y down, Z to the front 
+         #X points to the right, Y down, Z to the front
+         #
+         #The Male mean interpupillary distance is 64.7 mm (https://en.wikipedia.org/wiki/Interpupillary_distance)
+         #
          P3D_RIGHT_SIDE = np.float32([-100.0, -77.5, -5.0]) #0
          P3D_GONION_RIGHT = np.float32([-110.0, -77.5, -85.0]) #4
          P3D_MENTON = np.float32([0.0, 0.0, -122.7]) #8
@@ -322,10 +325,10 @@ class PnpHeadPoseEstimator:
          P3D_SELLION = np.float32([0.0, 0.0, 0.0]) #27 This is the world origin
          P3D_NOSE = np.float32([21.1, 0.0, -48.0]) #30
          P3D_SUB_NOSE = np.float32([5.0, 0.0, -52.0]) #33
-         P3D_RIGHT_EYE = np.float32([-20.0, -65.5,-5.0]) #36
-         P3D_RIGHT_TEAR = np.float32([-10.0, -40.5,-5.0]) #39
-         P3D_LEFT_TEAR = np.float32([-10.0, 40.5,-5.0]) #42
-         P3D_LEFT_EYE = np.float32([-20.0, 65.5,-5.0]) #45
+         P3D_RIGHT_EYE = np.float32([-20.0, -32.35,-5.0]) #36 
+         P3D_RIGHT_TEAR = np.float32([-10.0, -20.25,-5.0]) #39
+         P3D_LEFT_TEAR = np.float32([-10.0, 20.25,-5.0]) #42
+         P3D_LEFT_EYE = np.float32([-20.0, 32.35,-5.0]) #45
          #P3D_LIP_RIGHT = np.float32([-20.0, 65.5,-5.0]) #48
          #P3D_LIP_LEFT = np.float32([-20.0, 65.5,-5.0]) #54
          P3D_STOMION = np.float32([10.0, 0.0, -75.0]) #62
@@ -382,7 +385,7 @@ class PnpHeadPoseEstimator:
                        rmat[1,0], rmat[1,1], rmat[1,2], tvec[1],
                        rmat[2,0], rmat[2,1], rmat[2,2], tvec[2],
                              0.0,      0.0,        0.0,    1.0 ]
-         print(head_pose) #TODO remove this line
+         #print(head_pose) #TODO remove this line
          return self.rotationMatrixToEulerAngles(rmat)
 
 
