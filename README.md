@@ -18,6 +18,10 @@ What is a Convolutional Neural Network?
 ------------------------------
 A convolutional neural network (CNN, or ConvNet) is a type of feed-forward artificial neural network in which the connectivity pattern between its neurons is inspired by the organization of the animal visual cortex, whose individual neurons are arranged in such a way that they respond to overlapping regions tiling the visual field. Convolutional networks were inspired by biological processes and are variations of multilayer perceptrons designed to use minimal amounts of preprocessing. They have wide applications in image and video recognition, recommender systems and natural language processing [[wiki]](https://en.wikipedia.org/wiki/Convolutional_neural_network)
 
+<p align="center">
+<img src="doc/images/figure_cnn.png" width="700">
+</p>
+
 
 Prerequisites
 ------------
