@@ -361,8 +361,8 @@ class CnnHeadPoseEstimator:
              image_normalised = np.add(image, -127) #normalisation of the input
              feed_dict = {self.tf_pitch_input_vector : image_normalised}
              pitch_raw = self._sess.run([self.cnn_output], feed_dict=feed_dict)
-             pitch_vector = np.multiply(pitch_raw, 40.0)
-             #pitch = pitch_raw #* 40 #cnn out is in range [-1, +1] --> [-40, + 40]
+             pitch_vector = np.multiply(pitch_raw, 45.0)
+             #pitch = pitch_raw #* 40 #cnn out is in range [-1, +1] --> [-45, + 45]
              if(radians==True): return np.multiply(pitch_vector, np.pi/180.0) #to radians
              else: return pitch_vector
          #If the image is > 64 pixel then resize it
@@ -371,7 +371,7 @@ class CnnHeadPoseEstimator:
              image_normalised = np.add(image_resized, -127) #normalisation of the input
              feed_dict = {self.tf_pitch_input_vector : image_normalised}
              pitch_raw = self._sess.run([self.cnn_output], feed_dict=feed_dict)       
-             pitch_vector = np.multiply(pitch_raw, 40.0) #cnn-out is in range [-1, +1] --> [-40, + 40]
+             pitch_vector = np.multiply(pitch_raw, 45.0) #cnn-out is in range [-1, +1] --> [-45, + 45]
              if(radians==True): return np.multiply(pitch_vector, np.pi/180.0) #to radians
              else: return pitch_vector
          #wrong shape          
