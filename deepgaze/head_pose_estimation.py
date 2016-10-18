@@ -151,7 +151,7 @@ class CnnHeadPoseEstimator:
             return out
  
         # Get the result from the model
-        self.cnn_output = model(self.tf_yaw_input_vector)
+        self.cnn_yaw_output = model(self.tf_yaw_input_vector)
 
  
     def load_yaw_variables(self, YawFilePath):
@@ -198,7 +198,7 @@ class CnnHeadPoseEstimator:
          if(h == w and h==64 and d==3):
              image_normalised = np.add(image, -127) #normalisation of the input
              feed_dict = {self.tf_yaw_input_vector : image_normalised}
-             yaw_raw = self._sess.run([self.cnn_output], feed_dict=feed_dict)
+             yaw_raw = self._sess.run([self.cnn_yaw_output], feed_dict=feed_dict)
              yaw_vector = np.multiply(yaw_raw, 100.0)
              #yaw = yaw_raw #* 100 #cnn out is in range [-1, +1] --> [-100, + 100]
              if(radians==True): return np.multiply(yaw_vector, np.pi/180.0) #to radians
@@ -208,7 +208,7 @@ class CnnHeadPoseEstimator:
              image_resized = cv2.resize(image, (64, 64), interpolation = cv2.INTER_AREA)
              image_normalised = np.add(image_resized, -127) #normalisation of the input
              feed_dict = {self.tf_yaw_input_vector : image_normalised}
-             yaw_raw = self._sess.run([self.cnn_output], feed_dict=feed_dict)       
+             yaw_raw = self._sess.run([self.cnn_yaw_output], feed_dict=feed_dict)       
              yaw_vector = np.multiply(yaw_raw, 100.0) #cnn-out is in range [-1, +1] --> [-100, + 100]
              if(radians==True): return np.multiply(yaw_vector, np.pi/180.0) #to radians
              else: return yaw_vector
@@ -313,7 +313,7 @@ class CnnHeadPoseEstimator:
             return out
  
         # Get the result from the model
-        self.cnn_output = model(self.tf_pitch_input_vector)
+        self.cnn_pitch_output = model(self.tf_pitch_input_vector)
 
  
     def load_pitch_variables(self, pitchFilePath):
@@ -360,7 +360,7 @@ class CnnHeadPoseEstimator:
          if(h == w and h==64 and d==3):
              image_normalised = np.add(image, -127) #normalisation of the input
              feed_dict = {self.tf_pitch_input_vector : image_normalised}
-             pitch_raw = self._sess.run([self.cnn_output], feed_dict=feed_dict)
+             pitch_raw = self._sess.run([self.cnn_pitch_output], feed_dict=feed_dict)
              pitch_vector = np.multiply(pitch_raw, 45.0)
              #pitch = pitch_raw #* 40 #cnn out is in range [-1, +1] --> [-45, + 45]
              if(radians==True): return np.multiply(pitch_vector, np.pi/180.0) #to radians
@@ -370,7 +370,7 @@ class CnnHeadPoseEstimator:
              image_resized = cv2.resize(image, (64, 64), interpolation = cv2.INTER_AREA)
              image_normalised = np.add(image_resized, -127) #normalisation of the input
              feed_dict = {self.tf_pitch_input_vector : image_normalised}
-             pitch_raw = self._sess.run([self.cnn_output], feed_dict=feed_dict)       
+             pitch_raw = self._sess.run([self.cnn_pitch_output], feed_dict=feed_dict)       
              pitch_vector = np.multiply(pitch_raw, 45.0) #cnn-out is in range [-1, +1] --> [-45, + 45]
              if(radians==True): return np.multiply(pitch_vector, np.pi/180.0) #to radians
              else: return pitch_vector
