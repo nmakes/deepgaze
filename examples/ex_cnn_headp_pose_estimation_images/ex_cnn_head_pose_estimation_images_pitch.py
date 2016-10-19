@@ -14,12 +14,12 @@ from deepgaze.head_pose_estimation import CnnHeadPoseEstimator
 
 sess = tf.Session() #Launch the graph in a session.
 my_head_pose_estimator = CnnHeadPoseEstimator(sess) #Head pose estimation object
-my_head_pose_estimator.load_pitch_variables("../../etc/tensorflow/head_pose/pitch/cnn_arch2_pitch_f2-29999")
+my_head_pose_estimator.load_pitch_variables("../../etc/tensorflow/head_pose/pitch/cnn_cccdd_30k.tf")
 
 for i in range(1,9):
     file_name = str(i) + ".jpg"
     print("Processing image ..... " + file_name)
     image = cv2.imread(file_name) #Read the image with OpenCV
-    pitch = my_head_pose_estimator.return_pitch(image) #Evaluate the yaw angle using a CNN
+    pitch = my_head_pose_estimator.return_pitch(image) #Evaluate the pitch angle using a CNN
     print("Estimated pitch ..... " + str(pitch[0,0,0]))
     print("")
