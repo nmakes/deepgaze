@@ -12,9 +12,8 @@ import numpy as np
 import cv2
 import sys
 
-
-class RangeSkinDetector:
-    """Using this detector it is possible to isolate skin color in a specified range.
+class RangeColorDetector:
+    """Using this detector it is possible to isolate colors in a specified range.
 
     In this detector the frame given as input is filtered and the pixel which
     fall in a specific range are taken, the other rejected. Some erosion and
@@ -24,21 +23,22 @@ class RangeSkinDetector:
     and V compoenent specifies the illuminations.
     """
 
-    def __init__(self, min_range = None, max_range = None):
-        """Init the face detector object.
+    def __init__(self, min_range, max_range):
+        """Init the color detector object.
 
-        The skin in channel H is characterized by values between 0 and 50, 
-        in the channel S from 0.23 to 0.68 (Asian and Caucasian).
+        The object must be initialised with an HSV range to use as filter.
+        Ex: skin color in channel H is characterized by values between [0, 20], 
+        in the channel S=[48, 255] and V=[80, 255] (Asian and Caucasian).
         @param range_min the minimum HSV value to use as filer (numpy.array)
         @param range_max the maximum HSV value to use as filter (numpy.array)
         """
-        if(min_range==None): min_range = np.array([0, 48, 80], dtype = "uint8")
-        if(max_range==None): max_range = np.array([20, 255, 255], dtype = "uint8")
+        #if(min_range==None): min_range = np.array([0, 48, 80], dtype = "uint8")
+        #if(max_range==None): max_range = np.array([20, 255, 255], dtype = "uint8")
         # min and max range to use as filter for the detector (HSV)
         self.min_range = min_range
         self.max_range = max_range
 
-    def setRange(self, range_min, range_max):
+    def setRange(self, min_range, max_range):
         """Set the min and max range used in the range detector
  
         The skin in channel H is characterized by values between 0 and 50, 
@@ -83,20 +83,22 @@ class RangeSkinDetector:
         return frame_filtered
 
 
-    def returnFilteredDenoised(self, frame):
+    def returnFilteredDenoised(self, frame, iterations=2, blur=True):
         """Given an input frame return the filtered and denoised version.
  
         @param frame the original frame (color)
+        @param iterations the number of time erode and dilate are called
+        @param blur if True it uses a Gaussian Kernel to remove Gaussian noise
         """
         #Convert to HSV and eliminate pixels outside the range
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         frame_filtered = cv2.inRange(frame_hsv, self.min_range, self.max_range)
         #Applying some denoising operation on the frame
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
-	frame_filtered = cv2.erode(frame_filtered, kernel, iterations = 2)
-	frame_filtered = cv2.dilate(frame_filtered, kernel, iterations = 2)
+	frame_filtered = cv2.erode(frame_filtered, kernel, iterations = iterations)
+	frame_filtered = cv2.dilate(frame_filtered, kernel, iterations = iterations)
         #Blur and then bitwise mask
-	frame_filtered = cv2.GaussianBlur(frame_filtered, (3, 3), 0)
+	if(blur==True): frame_filtered = cv2.GaussianBlur(frame_filtered, (3, 3), 0)
 	frame_denoised = cv2.bitwise_and(frame, frame, mask = frame_filtered)
         return frame_denoised
 
