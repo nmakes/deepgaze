@@ -28,12 +28,13 @@ class RangeColorDetector:
 
         The object must be initialised with an HSV range to use as filter.
         Ex: skin color in channel H is characterized by values between [0, 20], 
-        in the channel S=[48, 255] and V=[80, 255] (Asian and Caucasian).
+        in the channel S=[48, 255] and V=[80, 255] (Asian and Caucasian). To
+        initialise the vectors in this range it is possible to write:       
+        min_range = numpy.array([0, 48, 80], dtype = "uint8")
+        max_range = numpy.array([20, 255, 255], dtype = "uint8")
         @param range_min the minimum HSV value to use as filer (numpy.array)
         @param range_max the maximum HSV value to use as filter (numpy.array)
         """
-        #if(min_range==None): min_range = np.array([0, 48, 80], dtype = "uint8")
-        #if(max_range==None): max_range = np.array([20, 255, 255], dtype = "uint8")
         # min and max range to use as filter for the detector (HSV)
         self.min_range = min_range
         self.max_range = max_range
