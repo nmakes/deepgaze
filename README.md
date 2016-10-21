@@ -5,6 +5,9 @@ Deepgaze is a library which uses **Convolutional Neural Networks** (CNNs) to est
 This library is the result of my recent work which is under submission:
 *Head Pose Estimation in the Wild using Convolutional Neural Networks and Adaptive Gradient Methods*
 
+**Update 21/10/2016**:
+New package color_detectio.py added. Using the classes inside this package it is possible to detect colors (ex. skin) [[example]](./examples/ex_color_detection_image/ex_color_detection_image.py)
+
 **Update 19/10/2016**:
 Working example on how to use CNNs for the pitch estimation [[code]](./examples/ex_cnn_headp_pose_estimation_images/ex_cnn_head_pose_estimation_images_pitch.py)
 
