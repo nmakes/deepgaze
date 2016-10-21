@@ -89,6 +89,11 @@ Examples
 <img src="doc/images/ex_cnn_head_pose_estimation_images.png" width="700">
 </p>
 
+- Color detection using the Histogram Backprojection algorithm [[code]](./examples/ex_color_detection_image/ex_color_detection_image.py)
+
+<p align="center">
+<img src="doc/images/ex_color_detection_image.png" width="700">
+</p>
 
 Acknowledgments
 ---------------
