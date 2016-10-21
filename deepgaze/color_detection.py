@@ -12,6 +12,73 @@ import numpy as np
 import cv2
 import sys
 
+class BackProjectionColorDetector:
+    """Implementation of the Histogram Backprojection algorithm.
+
+    The histogram backprojection was proposed by Michael Swain and Dana Ballard 
+    in their paper "Indexing via color histograms".
+    Abstract: The color spectrum of multicolored objects provides a a robust, 
+    efficient cue for indexing into a large database of models. This paper shows 
+    color histograms to be stable object representations over change in view, and 
+    demonstrates they can differentiate among a large number of objects. It introduces 
+    a technique called Histogram Intersection for matching model and image histograms 
+    and a fast incremental version of Histogram Intersection that allows real-time 
+    indexing into a large database of stored models using standard vision hardware. 
+    Color can also be used to search for the location of an object. An algorithm 
+    called Histogram Backprojection performs this task efficiently in crowded scenes.
+    """
+
+    def __init__(self):
+        """Init the color detector object.
+
+    """
+        self.template_hsv = None
+
+    def setTemplate(self, frame):
+        """Set the BGR image used as template during the pixel selection
+ 
+        The template can be a spedific region of interest of the main
+        frame or a representative color scheme to identify. the template
+        is internally stored as an HSV image.
+        @param frame the template to use in the algorithm
+        """      
+        self.template_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+    def getTemplate(self):
+        """Get the BGR image used as template during the pixel selection
+ 
+        The template can be a spedific region of interest of the main
+        frame or a representative color scheme to identify.
+        """
+        if(self.template_hsv == None): 
+            return None
+        else:
+            return cv2.cvtColor(self.template_hsv, cv2.COLOR_HSV2BGR)
+
+    def returnFiltered(self, frame):
+        """Given an input frame in BGR return the filtered version.
+ 
+        @param frame the original frame (color)
+        """
+        if(self.template_hsv == None): return None
+        #Convert the input framge from BGR -> HSV
+        frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        #Set the template histogram
+        template_hist = cv2.calcHist([self.template_hsv],[0, 1], None, [180, 256], [0, 180, 0, 256] )
+        #Normalize the template histogram and apply backprojection
+        cv2.normalize(template_hist, template_hist, 0, 255, cv2.NORM_MINMAX)
+        frame_hsv = cv2.calcBackProject([frame_hsv], [0,1], template_hist, [0,180,0,256], 1)
+        #Get the kernel and apply a convolution
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))
+        frame_hsv = cv2.filter2D(frame_hsv, -1, kernel)
+        #Get the threshold
+        ret, frame_threshold = cv2.threshold(frame_hsv, 50, 255, 0)
+        #Merge the threshold matrices
+        frame_threshold = cv2.merge((frame_threshold,frame_threshold,frame_threshold))
+        #Return the AND image
+        return cv2.bitwise_and(frame, frame_threshold)
+
+
 class RangeColorDetector:
     """Using this detector it is possible to isolate colors in a specified range.
 
