@@ -50,17 +50,20 @@ class BackProjectionColorDetector:
         The template can be a spedific region of interest of the main
         frame or a representative color scheme to identify.
         """
-        if(self.template_hsv == None): 
+        if(self.template_hsv is None): 
             return None
         else:
             return cv2.cvtColor(self.template_hsv, cv2.COLOR_HSV2BGR)
 
-    def returnFiltered(self, frame):
+    def returnFiltered(self, frame, morph_opening=True, blur=True, kernel_size=5, iterations=1):
         """Given an input frame in BGR return the filtered version.
  
         @param frame the original frame (color)
+        @param morph_opening it is a erosion followed by dilatation to remove noise
+        @param blur to smoth the image it is possible to apply Gaussian Blur
+        @param kernel_size is the kernel dimension used for morph and blur
         """
-        if(self.template_hsv == None): return None
+        if(self.template_hsv is None): return None
         #Convert the input framge from BGR -> HSV
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         #Set the template histogram
@@ -69,8 +72,15 @@ class BackProjectionColorDetector:
         cv2.normalize(template_hist, template_hist, 0, 255, cv2.NORM_MINMAX)
         frame_hsv = cv2.calcBackProject([frame_hsv], [0,1], template_hist, [0,180,0,256], 1)
         #Get the kernel and apply a convolution
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size,kernel_size))
         frame_hsv = cv2.filter2D(frame_hsv, -1, kernel)
+        #Applying the morph open operation (erosion followed by dilation)
+        if(morph_opening==True):
+            kernel = np.ones((kernel_size,kernel_size), np.uint8)
+            frame_hsv = cv2.morphologyEx(frame_hsv, cv2.MORPH_OPEN, kernel, iterations=iterations)
+        #Applying Gaussian Blur
+        if(blur==True): 
+            frame_hsv = cv2.GaussianBlur(frame_hsv, (kernel_size,kernel_size), 0)
         #Get the threshold
         ret, frame_threshold = cv2.threshold(frame_hsv, 50, 255, 0)
         #Merge the threshold matrices
@@ -78,12 +88,15 @@ class BackProjectionColorDetector:
         #Return the AND image
         return cv2.bitwise_and(frame, frame_threshold)
 
-    def returnMask(self, frame):
-        """Given an input frame in BGR return the filtered version.
+    def returnMask(self, frame, morph_opening=True, blur=True, kernel_size=5, iterations=1):
+        """Given an input frame in BGR return the black/white mask.
  
         @param frame the original frame (color)
+        @param morph_opening it is a erosion followed by dilatation to remove noise
+        @param blur to smoth the image it is possible to apply Gaussian Blur
+        @param kernel_size is the kernel dimension used for morph and blur
         """
-        if(self.template_hsv == None): return None
+        if(self.template_hsv is None): return None
         #Convert the input framge from BGR -> HSV
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         #Set the template histogram
@@ -92,8 +105,15 @@ class BackProjectionColorDetector:
         cv2.normalize(template_hist, template_hist, 0, 255, cv2.NORM_MINMAX)
         frame_hsv = cv2.calcBackProject([frame_hsv], [0,1], template_hist, [0,180,0,256], 1)
         #Get the kernel and apply a convolution
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size,kernel_size))
         frame_hsv = cv2.filter2D(frame_hsv, -1, kernel)
+        #Applying the morph open operation (erosion followed by dilation)
+        if(morph_opening==True):
+            kernel = np.ones((kernel_size,kernel_size), np.uint8)
+            frame_hsv = cv2.morphologyEx(frame_hsv, cv2.MORPH_OPEN, kernel, iterations=iterations)
+        #Applying Gaussian Blur
+        if(blur==True): 
+            frame_hsv = cv2.GaussianBlur(frame_hsv, (kernel_size,kernel_size), 0)
         #Get the threshold
         ret, frame_threshold = cv2.threshold(frame_hsv, 50, 255, 0)
         #Merge the threshold matrices
@@ -146,20 +166,35 @@ class RangeColorDetector:
         return (self.min_range, self.max_range)
 
 
-    def returnFiltered(self, frame):
-        """Given an input frame return the filtered version.
+    def returnFiltered(self, frame, morph_opening=True, blur=True, kernel_size=5, iterations=1):
+        """Given an input frame return the filtered and denoised version.
  
         @param frame the original frame (color)
+        @param morph_opening it is a erosion followed by dilatation to remove noise
+        @param blur to smoth the image it is possible to apply Gaussian Blur
+        @param kernel_size is the kernel dimension used for morph and blur
+        @param iterations the number of time erode and dilate are called
         """
         #Convert to HSV and eliminate pixels outside the range
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         frame_filtered = cv2.inRange(frame_hsv, self.min_range, self.max_range)
-        #Bitwise mask
-	frame_filtered = cv2.bitwise_and(frame, frame, mask = frame_filtered)
-        return frame_filtered
+        #Applying some denoising operation on the frame
+        #kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
+	#frame_filtered = cv2.erode(frame_filtered, kernel, iterations = iterations)
+	#frame_filtered = cv2.dilate(frame_filtered, kernel, iterations = iterations)
+        #Applying the morph open operation (erosion followed by dilation)
+        if(morph_opening==True):
+            kernel = np.ones((kernel_size,kernel_size), np.uint8)
+            frame_filtered = cv2.morphologyEx(frame_filtered, cv2.MORPH_OPEN, kernel, iterations=iterations)
+        #Applying Gaussian Blur
+        if(blur==True): 
+            frame_filtered = cv2.GaussianBlur(frame_filtered, (kernel_size,kernel_size), 0)
+        #bitwiseAND mask
+	frame_denoised = cv2.bitwise_and(frame, frame, mask = frame_filtered)
+        return frame_denoised
 
-    def returnRawFiltered(self, frame):
-        """Given an input frame return the Raw filtered version.
+    def returnMask(self, frame, morph_opening=True, blur=True, kernel_size=5, iterations=1):
+        """Given an input frame return the black/white mask.
  
         This version of the function does not use the blur and bitwise 
         operations, then the resulting frame contains white pixels
@@ -169,27 +204,15 @@ class RangeColorDetector:
         #Convert to HSV and eliminate pixels outside the range
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         frame_filtered = cv2.inRange(frame_hsv, self.min_range, self.max_range)
+        if(morph_opening==True):
+            kernel = np.ones((kernel_size,kernel_size), np.uint8)
+            frame_filtered = cv2.morphologyEx(frame_filtered, cv2.MORPH_OPEN, kernel, iterations=iterations)
+        #Applying Gaussian Blur
+        if(blur==True): 
+            frame_filtered = cv2.GaussianBlur(frame_filtered, (kernel_size,kernel_size), 0)
         return frame_filtered
 
 
-    def returnFilteredDenoised(self, frame, iterations=2, blur=True):
-        """Given an input frame return the filtered and denoised version.
- 
-        @param frame the original frame (color)
-        @param iterations the number of time erode and dilate are called
-        @param blur if True it uses a Gaussian Kernel to remove Gaussian noise
-        """
-        #Convert to HSV and eliminate pixels outside the range
-        frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        frame_filtered = cv2.inRange(frame_hsv, self.min_range, self.max_range)
-        #Applying some denoising operation on the frame
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
-	frame_filtered = cv2.erode(frame_filtered, kernel, iterations = iterations)
-	frame_filtered = cv2.dilate(frame_filtered, kernel, iterations = iterations)
-        #Blur and then bitwise mask
-	if(blur==True): frame_filtered = cv2.GaussianBlur(frame_filtered, (3, 3), 0)
-	frame_denoised = cv2.bitwise_and(frame, frame, mask = frame_filtered)
-        return frame_denoised
 
 
 
