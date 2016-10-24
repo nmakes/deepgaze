@@ -100,6 +100,12 @@ Examples
 <img src="doc/images/ex_color_detection_image.png" width="750">
 </p>
 
+- Skin detection using the HSV range detector [[code]](./examples/ex_skin_detection_images/ex_skin_detection_images.py)
+
+<p align="center">
+<img src="doc/images/images/ex_skin_detection_images.png" width="750">
+</p>
+
 Acknowledgments
 ---------------
 
