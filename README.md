@@ -2,11 +2,11 @@ Updates
 ----------
 
 **Update 21/10/2016**:
-New package [color_detection.py](./deepgaze/color_detection.py) added. Using the classes inside this package it is possible to detect colors (ex. skin) [[example]](./examples/ex_color_detection_image/ex_color_detection_image.py)
+New package [color_detection.py](./deepgaze/color_detection.py) added. Using the classes inside this package it is possible to detect colors [[example]](./examples/ex_color_detection_image/ex_color_detection_image.py) and skin [[example]](./examples/ex_color_detection_image/ex_color_detection_image.py)
 
 **Update 19/10/2016**:
 Working example on how to use CNNs for the pitch estimation [[code]](./examples/ex_cnn_headp_pose_estimation_images/ex_cnn_head_pose_estimation_images_pitch.py)
-Working example on how to use CNNs for both yaw and pitch estimation [[code]](./examples/ex_cnn_headp_pose_estimation_images/ex_cnn_head_pose_estimation_images_pitch_yaw.py)
+Working example on how to use CNNs for both yaw and pitch estimation [[code]](./examples/ex_skin_detection_images/ex_skin_detection_images.py)
 
 **Update 5/10/2016**:
 Working example on how to use CNNs for head pose estimation (for the moment only yaw angle) [[code]](./examples/ex_cnn_headp_pose_estimation_images/ex_cnn_head_pose_estimation_images.py)
@@ -103,7 +103,7 @@ Examples
 - Skin detection using the HSV range detector [[code]](./examples/ex_skin_detection_images/ex_skin_detection_images.py)
 
 <p align="center">
-<img src="doc/images/images/ex_skin_detection_images.png" width="750">
+<img src="doc/images/ex_skin_detection_images.png" width="750">
 </p>
 
 Acknowledgments
