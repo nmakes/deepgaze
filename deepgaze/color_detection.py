@@ -119,6 +119,30 @@ class BackProjectionColorDetector:
         #Merge the threshold matrices
         return cv2.merge((frame_threshold,frame_threshold,frame_threshold))
 
+    def returnMaxAreaCenter(self, mask):
+        """Given a black/white mask as input it returns the centre of the contour with largest area.
+ 
+        This method could be useful to find the center of a face when a skin detector filter is used.
+        @param mask the blac/white image returned with returnMask() function
+        @return get the x and y center coords of the contour whit the largest area 
+        """
+        contours, hierarchy = cv2.findContours(mask, 1, 2)
+        area_array = np.zeros(len(contours)) #contains the area of the contours
+        counter = 0
+        for cnt in contours:   
+                #cv2.drawContours(image, [cnt], 0, (0,255,0), 3)
+                #print("Area: " + str(cv2.contourArea(cnt)))
+                area_array[counter] = cv2.contourArea(cnt)
+                counter += 1
+
+        max_area_index = np.argmax(area_array) #return the index of the max_area element
+        #cv2.drawContours(image, [contours[max_area_index]], 0, (0,255,0), 3)
+        #Get the centre of the max_area element
+        cnt = contours[max_area_index]
+        M = cv2.moments(cnt) #calculate the moments
+        cx = int(M['m10']/M['m00']) #get the center from the moments
+        cy = int(M['m01']/M['m00'])
+        return (cx, cy) #return the center coords
 
 class RangeColorDetector:
     """Using this detector it is possible to isolate colors in a specified range.
@@ -213,10 +237,28 @@ class RangeColorDetector:
         return frame_filtered
 
 
+    def returnMaxAreaCenter(self, mask):
+        """Given a black/white mask as input it returns the centre of the contour with largest area.
+ 
+        This method could be useful to find the center of a face when a skin detector filter is used.
+        @param mask the blac/white image returned with returnMask() function
+        @return get the x and y center coords of the contour whit the largest area 
+        """
+        contours, hierarchy = cv2.findContours(mask, 1, 2)
+        area_array = np.zeros(len(contours)) #contains the area of the contours
+        counter = 0
+        for cnt in contours:   
+                #cv2.drawContours(image, [cnt], 0, (0,255,0), 3)
+                #print("Area: " + str(cv2.contourArea(cnt)))
+                area_array[counter] = cv2.contourArea(cnt)
+                counter += 1
 
-
-
-
-
-
+        max_area_index = np.argmax(area_array) #return the index of the max_area element
+        #cv2.drawContours(image, [contours[max_area_index]], 0, (0,255,0), 3)
+        #Get the centre of the max_area element
+        cnt = contours[max_area_index]
+        M = cv2.moments(cnt) #calculate the moments
+        cx = int(M['m10']/M['m00']) #get the center from the moments
+        cy = int(M['m01']/M['m00'])
+        return (cx, cy) #return the center coords
 
