@@ -8,6 +8,12 @@
 #CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
 #SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+#In this example I use the range detector class to detect skin in two pictures
+#The range detector find which pixels are included in a specific range.
+#The hardest part is to find the correct boundaries for the range and tune
+#the detector with the right morphing operation in order to have clean results
+#and remove noise. The filter use HSV color representation (https://en.wikipedia.org/wiki/HSL_and_HSV)
+
 import numpy as np
 import cv2
 from deepgaze.color_detection import RangeColorDetector
