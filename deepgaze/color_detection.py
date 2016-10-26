@@ -144,6 +144,44 @@ class BackProjectionColorDetector:
         cy = int(M['m01']/M['m00'])
         return (cx, cy) #return the center coords
 
+    def returnMaxAreaContour(self, mask):
+        """Given a black/white mask as input it returns the contour with largest area.
+ 
+        This method could be useful to find a face when a skin detector filter is used.
+        @param mask the blac/white image returned with returnMask() function
+        @return get the x and y center coords of the contour whit the largest area 
+        """
+        contours, hierarchy = cv2.findContours(mask, 1, 2)
+        area_array = np.zeros(len(contours)) #contains the area of the contours
+        counter = 0
+        for cnt in contours:   
+                #cv2.drawContours(image, [cnt], 0, (0,255,0), 3)
+                #print("Area: " + str(cv2.contourArea(cnt)))
+                area_array[counter] = cv2.contourArea(cnt)
+                counter += 1
+        max_area_index = np.argmax(area_array) #return the index of the max_area element
+        cnt = contours[max_area_index]
+        return cnt #return the max are contour
+
+    def returnMaxAreaRectangle(self, mask):
+        """Given a black/white mask as input it returns the rectangle sorrounding 
+           the contour with the largest area.
+ 
+        This method could be useful to find a face when a skin detector filter is used.
+        @param mask the blac/white image returned with returnMask() function
+        @return get the coords of the upper corner of the rectangle (x, y) and the rectangle size (widht, hight)
+        """
+        contours, hierarchy = cv2.findContours(mask, 1, 2)
+        area_array = np.zeros(len(contours)) #contains the area of the contours
+        counter = 0
+        for cnt in contours:   
+                area_array[counter] = cv2.contourArea(cnt)
+                counter += 1
+        max_area_index = np.argmax(area_array) #return the index of the max_area element
+        cnt = contours[max_area_index]
+        (x, y, w, h) = cv2.boundingRect(cnt)
+        return (x, y, w, h)
+
 class RangeColorDetector:
     """Using this detector it is possible to isolate colors in a specified range.
 
@@ -261,4 +299,42 @@ class RangeColorDetector:
         cx = int(M['m10']/M['m00']) #get the center from the moments
         cy = int(M['m01']/M['m00'])
         return (cx, cy) #return the center coords
+
+    def returnMaxAreaContour(self, mask):
+        """Given a black/white mask as input it returns the contour with largest area.
+ 
+        This method could be useful to find a face when a skin detector filter is used.
+        @param mask the blac/white image returned with returnMask() function
+        @return get the x and y center coords of the contour whit the largest area 
+        """
+        contours, hierarchy = cv2.findContours(mask, 1, 2)
+        area_array = np.zeros(len(contours)) #contains the area of the contours
+        counter = 0
+        for cnt in contours:   
+                #cv2.drawContours(image, [cnt], 0, (0,255,0), 3)
+                #print("Area: " + str(cv2.contourArea(cnt)))
+                area_array[counter] = cv2.contourArea(cnt)
+                counter += 1
+        max_area_index = np.argmax(area_array) #return the index of the max_area element
+        cnt = contours[max_area_index]
+        return cnt #return the max are contour
+
+    def returnMaxAreaRectangle(self, mask):
+        """Given a black/white mask as input it returns the rectangle sorrounding 
+           the contour with the largest area.
+ 
+        This method could be useful to find a face when a skin detector filter is used.
+        @param mask the blac/white image returned with returnMask() function
+        @return get the coords of the upper corner of the rectangle (x, y) and the rectangle size (widht, hight)
+        """
+        contours, hierarchy = cv2.findContours(mask, 1, 2)
+        area_array = np.zeros(len(contours)) #contains the area of the contours
+        counter = 0
+        for cnt in contours:   
+                area_array[counter] = cv2.contourArea(cnt)
+                counter += 1
+        max_area_index = np.argmax(area_array) #return the index of the max_area element
+        cnt = contours[max_area_index]
+        (x, y, w, h) = cv2.boundingRect(cnt)
+        return (x, y, w, h)
 
