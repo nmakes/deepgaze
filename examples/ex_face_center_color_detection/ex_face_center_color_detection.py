@@ -33,9 +33,15 @@ image_mask = my_skin_detector.returnMask(image, morph_opening=True, blur=True, k
 #the contour points.
 cx, cy = my_skin_detector.returnMaxAreaCenter(image_mask)
 cnt = my_skin_detector.returnMaxAreaContour(image_mask)
+#Uncomment if you want to get the coords of the rectangle sourrinding
+#the largest area contour (in this case the face)
+#x, y, w, h = my_skin_detector.returnMaxAreaRectangle(image_mask)
 
 #Drawing and displaying
 image_canvas = np.copy(image)
+#Uncomment the line below only if you uncomment also the line
+#with returnMaxAreaRectangle(image_mask) function.
+#cv2.rectangle(image_canvas, (x,y), (x+w,y+h), [255,0,0])
 cv2.drawContours(image_canvas, [cnt], 0, (0,255,0), 2)
 cv2.circle(image_canvas, (cx, cy), 2, [0, 0,255], 3)
 image_stack = np.hstack((image, image_filtered, image_canvas))
