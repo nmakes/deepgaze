@@ -8,6 +8,12 @@
 #CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
 #SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+#In this example the Backprojection algorithm is used in order to find the pixels that have the same
+#HSV histogram of a predefined template. The template is a subframe of the main image or an external
+#matrix that can be used as a filter. In this example I take a subframe of the main image (the tiger
+# fur) and I use it for obtaining a filtered version of the original frame. A green rectangle shows
+#where the subframe is located.
+
 import cv2
 import numpy as np
 from deepgaze.color_detection import BackProjectionColorDetector
