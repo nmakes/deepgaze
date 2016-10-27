@@ -64,27 +64,8 @@ class BackProjectionColorDetector:
         @param kernel_size is the kernel dimension used for morph and blur
         """
         if(self.template_hsv is None): return None
-        #Convert the input framge from BGR -> HSV
-        frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        #Set the template histogram
-        template_hist = cv2.calcHist([self.template_hsv],[0, 1], None, [180, 256], [0, 180, 0, 256] )
-        #Normalize the template histogram and apply backprojection
-        cv2.normalize(template_hist, template_hist, 0, 255, cv2.NORM_MINMAX)
-        frame_hsv = cv2.calcBackProject([frame_hsv], [0,1], template_hist, [0,180,0,256], 1)
-        #Get the kernel and apply a convolution
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size,kernel_size))
-        frame_hsv = cv2.filter2D(frame_hsv, -1, kernel)
-        #Applying the morph open operation (erosion followed by dilation)
-        if(morph_opening==True):
-            kernel = np.ones((kernel_size,kernel_size), np.uint8)
-            frame_hsv = cv2.morphologyEx(frame_hsv, cv2.MORPH_OPEN, kernel, iterations=iterations)
-        #Applying Gaussian Blur
-        if(blur==True): 
-            frame_hsv = cv2.GaussianBlur(frame_hsv, (kernel_size,kernel_size), 0)
-        #Get the threshold
-        ret, frame_threshold = cv2.threshold(frame_hsv, 50, 255, 0)
-        #Merge the threshold matrices
-        frame_threshold = cv2.merge((frame_threshold,frame_threshold,frame_threshold))
+        #Get the mask from the internal function
+        frame_threshold = self.returnMask(frame, morph_opening=morph_opening, blur=blur, kernel_size=kernel_siz, iterations=iterations)
         #Return the AND image
         return cv2.bitwise_and(frame, frame_threshold)
 
@@ -174,20 +155,7 @@ class RangeColorDetector:
         @param kernel_size is the kernel dimension used for morph and blur
         @param iterations the number of time erode and dilate are called
         """
-        #Convert to HSV and eliminate pixels outside the range
-        frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        frame_filtered = cv2.inRange(frame_hsv, self.min_range, self.max_range)
-        #Applying some denoising operation on the frame
-        #kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
-	#frame_filtered = cv2.erode(frame_filtered, kernel, iterations = iterations)
-	#frame_filtered = cv2.dilate(frame_filtered, kernel, iterations = iterations)
-        #Applying the morph open operation (erosion followed by dilation)
-        if(morph_opening==True):
-            kernel = np.ones((kernel_size,kernel_size), np.uint8)
-            frame_filtered = cv2.morphologyEx(frame_filtered, cv2.MORPH_OPEN, kernel, iterations=iterations)
-        #Applying Gaussian Blur
-        if(blur==True): 
-            frame_filtered = cv2.GaussianBlur(frame_filtered, (kernel_size,kernel_size), 0)
+        frame_filtered = self.returnMask(frame, morph_opening=morph_opening, blur=blur, kernel_size=kernel_size, iterations=iterations)
         #bitwiseAND mask
 	frame_denoised = cv2.bitwise_and(frame, frame, mask = frame_filtered)
         return frame_denoised
