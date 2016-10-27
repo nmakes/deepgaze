@@ -35,7 +35,7 @@ class BinaryMaskAnalyser:
                 #print("Area: " + str(cv2.contourArea(cnt)))
                 area_array[counter] = cv2.contourArea(cnt)
                 counter += 1
-
+        if(area_array.size==0): return None #the array is empty
         max_area_index = np.argmax(area_array) #return the index of the max_area element
         #cv2.drawContours(image, [contours[max_area_index]], 0, (0,255,0), 3)
         #Get the centre of the max_area element
@@ -59,6 +59,7 @@ class BinaryMaskAnalyser:
                 #print("Area: " + str(cv2.contourArea(cnt)))
                 area_array[counter] = cv2.contourArea(cnt)
                 counter += 1
+        if(area_array.size==0): return None #the array is empty
         max_area_index = np.argmax(area_array) #return the index of the max_area element
         cnt = contours[max_area_index]
         return cnt #return the max are contour
@@ -75,6 +76,7 @@ class BinaryMaskAnalyser:
         for cnt in contours:   
                 area_array[counter] = cv2.contourArea(cnt)
                 counter += 1
+        if(area_array.size==0): return None #the array is empty
         max_area_index = np.argmax(area_array) #return the index of the max_area element
         cnt = contours[max_area_index]
         (x, y, w, h) = cv2.boundingRect(cnt)
