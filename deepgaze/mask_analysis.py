@@ -22,10 +22,12 @@ class BinaryMaskAnalyser:
     """
 
     def returnNumberOfContours(self, mask):
-        """it returns the centre of the contour with largest area.
+        """it returns the total number of contours present on the mask
  
-        This method could be useful to find the center of a face when a skin detector filter is used.
-        @return get the x and y center coords of the contour whit the largest area 
+        this method must be used during video analysis to check if the frame contains
+        at least one contour before calling the other function below.
+        @param mask the binary image to use in the function
+        @return get the number of contours 
         """
         contours, hierarchy = cv2.findContours(mask, 1, 2)
         if(hierarchy is None): return 0
@@ -35,6 +37,7 @@ class BinaryMaskAnalyser:
         """it returns the centre of the contour with largest area.
  
         This method could be useful to find the center of a face when a skin detector filter is used.
+        @param mask the binary image to use in the function
         @return get the x and y center coords of the contour whit the largest area 
         """
         contours, hierarchy = cv2.findContours(mask, 1, 2)
@@ -59,6 +62,7 @@ class BinaryMaskAnalyser:
         """it returns the contour with largest area.
  
         This method could be useful to find a face when a skin detector filter is used.
+        @param mask the binary image to use in the function
         @return get the x and y center coords of the contour whit the largest area 
         """
         contours, hierarchy = cv2.findContours(mask, 1, 2)
@@ -78,6 +82,7 @@ class BinaryMaskAnalyser:
         """it returns the rectangle sorrounding the contour with the largest area.
  
         This method could be useful to find a face when a skin detector filter is used.
+        @param mask the binary image to use in the function
         @return get the coords of the upper corner of the rectangle (x, y) and the rectangle size (widht, hight)
         """
         contours, hierarchy = cv2.findContours(mask, 1, 2)
