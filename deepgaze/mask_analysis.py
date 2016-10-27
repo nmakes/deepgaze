@@ -21,6 +21,16 @@ class BinaryMaskAnalyser:
     There are also functions for noise removal.
     """
 
+    def returnNumberOfContours(self, mask):
+        """it returns the centre of the contour with largest area.
+ 
+        This method could be useful to find the center of a face when a skin detector filter is used.
+        @return get the x and y center coords of the contour whit the largest area 
+        """
+        contours, hierarchy = cv2.findContours(mask, 1, 2)
+        if(hierarchy is None): return 0
+        else: return len(hierarchy)
+
     def returnMaxAreaCenter(self, mask):
         """it returns the centre of the contour with largest area.
  
