@@ -117,7 +117,7 @@ Examples
 <img src="doc/images/ex_face_center_color_detection.png" width="750">
 </p>
 
-- Motion detection using frame differencing [[code]](./examples/ex_diff_motion_detection_video/ex_diff_motion_detection.py)
+- Motion detection and tracking using frame differencing [[code]](./examples/ex_diff_motion_detection_video/ex_diff_motion_detection.py)
 
 <p align="center">
 <img src="doc/images/ex_diff_motion_detection_video.png" width="750">
