@@ -1,6 +1,9 @@
 Updates
 ----------
 
+**Update 28/10/2016**
+New package [motion detection](./deepgaze/motion_detection.py). Using the classes in this package it is possible to track moving objects through [background subtraction](https://en.wikipedia.org/wiki/Background_subtraction). Possible applications of this algorithm are people detection, vehicle detection and tracking [[example]](./examples/ex_diff_motion_detection_video/ex_diff_motion_detection.py)
+
 **Update 21/10/2016**:
 New package [color_detection.py](./deepgaze/color_detection.py) added. Using the classes inside this package it is possible to detect colors [[example]](./examples/ex_color_detection_image/ex_color_detection_image.py), skin [[example]](./examples/ex_skin_detection_images/ex_skin_detection_images.py) and faces [[example]](./examples/ex_face_center_color_detection/ex_face_center_color_detection.py)
 
@@ -19,7 +22,9 @@ What is deepgaze?
 ----------
 Deepgaze is a library which uses **Convolutional Neural Networks** (CNNs) to estimate the Focus of Attention (FOA) of users. The FOA can be approximately estimated finding the **head orientation**. This is particularly useful when the eyes are covered, or when the user is too far from the camera to grab the eye region with a good resolution. When the eye region is visible it is possible to estimate the **gaze direction**, which is much more informative and can give a good indication of the FOA.
 
-This library is the result of my recent work which is under submission:
+Deepgaze contains useful packages for face detection and tracking, skin and color detection. Deepgaze is based on OpenCV and Tensorflow, some of the best libraries in computer vision and machine learning.
+
+This library is the result of my recent work which is under revision:
 *Head Pose Estimation in the Wild using Convolutional Neural Networks and Adaptive Gradient Methods*
 
 What is a Convolutional Neural Network?
@@ -79,7 +84,7 @@ If you want to track all the installed files you can record the installation pro
 sudo python setup.py install --record record.txt
 ```
 
-Done! Now give a look to the examples folder.
+Done! Now give a look to the examples below.
 
 Examples
 --------
@@ -100,16 +105,22 @@ Examples
 <img src="doc/images/ex_color_detection_image.png" width="750">
 </p>
 
-- Skin detection using the HSV range detector [[code]](./examples/ex_skin_detection_images/ex_skin_detection_images.py)
+- Skin detection using the HSV range color detector [[code]](./examples/ex_skin_detection_images/ex_skin_detection_images.py)
 
 <p align="center">
 <img src="doc/images/ex_skin_detection_images.png" width="750">
 </p>
 
-- Face detection using the HSV range detector [[code]](./examples/ex_face_center_color_detection/ex_face_center_color_detection.py)
+- Face detection using the HSV range color detector [[code]](./examples/ex_face_center_color_detection/ex_face_center_color_detection.py)
 
 <p align="center">
 <img src="doc/images/ex_face_center_color_detection.png" width="750">
+</p>
+
+- Motion detection using frame differencing [[code]](./examples/ex_diff_motion_detection_video/ex_diff_motion_detection.py)
+
+<p align="center">
+<img src="doc/images/ex_diff_motion_detection_video.png" width="750">
 </p>
 
 Acknowledgments

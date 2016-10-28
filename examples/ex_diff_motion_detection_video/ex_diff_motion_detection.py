@@ -8,6 +8,15 @@
 #CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
 #SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+#In this example the Diff motion detector is used to find moving 
+#objects in a video stream. The camera should be stationary. 
+#The background image is a frame representing the scene without objects,
+#it should be passed in the setBackground() function and it is used 
+#internally as parameter of the absdiff function which return the 
+#pixels which are different between the background and the current frame. 
+#The contour with the largest area is isolated and a green rectangle 
+#is inseted around it in the output stream.
+
 import numpy as np
 import cv2
 from deepgaze.motion_detection import DiffMotionDetector
@@ -39,6 +48,8 @@ while(True):
     ret, frame = video_capture.read()
 
     frame_mask = my_motion_detector.returnMask(frame)
+    #Uncomment if you want more information about the frame with
+    #with the largest area.
     #cx, cy = my_mask_analyser.returnMaxAreaCenter(frame_mask)
     #cnt = my_mask_analyser.returnMaxAreaContour(frame_mask)
     
