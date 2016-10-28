@@ -15,7 +15,7 @@
 #internally as parameter of the absdiff function which return the 
 #pixels which are different between the background and the current frame. 
 #The contour with the largest area is isolated and a green rectangle 
-#is inseted around it in the output stream.
+#is drawn around it in the output stream.
 
 import numpy as np
 import cv2
