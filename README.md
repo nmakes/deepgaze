@@ -2,7 +2,7 @@ Updates
 ----------
 
 **Update 28/10/2016**
-New package [motion detection](./deepgaze/motion_detection.py). Using the classes in this package it is possible to track moving objects through [background subtraction](https://en.wikipedia.org/wiki/Background_subtraction). Possible applications of this algorithm are people detection, vehicle detection and tracking [[example]](./examples/ex_diff_motion_detection_video/ex_diff_motion_detection.py)
+New package [motion_detection.py](./deepgaze/motion_detection.py). Using the classes in this package it is possible to track moving objects through [background subtraction](https://en.wikipedia.org/wiki/Background_subtraction). Possible applications of this algorithm are people detection, vehicle detection and tracking [[example]](./examples/ex_diff_motion_detection_video/ex_diff_motion_detection.py)
 
 **Update 21/10/2016**:
 New package [color_detection.py](./deepgaze/color_detection.py) added. Using the classes inside this package it is possible to detect colors [[example]](./examples/ex_color_detection_image/ex_color_detection_image.py), skin [[example]](./examples/ex_skin_detection_images/ex_skin_detection_images.py) and faces [[example]](./examples/ex_face_center_color_detection/ex_face_center_color_detection.py)
@@ -20,9 +20,14 @@ Work in progress. The code provided at the moment does not still implement gaze 
 
 What is deepgaze?
 ----------
-Deepgaze is a library which uses **Convolutional Neural Networks** (CNNs) to estimate the Focus of Attention (FOA) of users. The FOA can be approximately estimated finding the **head orientation**. This is particularly useful when the eyes are covered, or when the user is too far from the camera to grab the eye region with a good resolution. When the eye region is visible it is possible to estimate the **gaze direction**, which is much more informative and can give a good indication of the FOA.
+Deepgaze is a library for peopl detection and tracking which uses **Convolutional Neural Networks** (CNNs) to estimate the Focus of Attention (FOA) of users. The FOA can be approximately estimated finding the **head orientation**. This is particularly useful when the eyes are covered, or when the user is too far from the camera to grab the eye region with a good resolution. When the eye region is visible it is possible to estimate the **gaze direction**, which is much more informative and can give a good indication of the FOA. Deepgaze contains useful packages for:
 
-Deepgaze contains useful packages for face detection and tracking, skin and color detection. Deepgaze is based on OpenCV and Tensorflow, some of the best libraries in computer vision and machine learning.
+- Head pose estimation (Pnp, Convolutional Neural Networks)
+- Face detection and tracking (Haar Cascade)
+- Skin and color detection (Range detection, Backprojection) 
+- Motion detection and tracking (Frame differencing) 
+
+Deepgaze is based on OpenCV and Tensorflow, some of the best libraries in computer vision and machine learning. Deepgaze is an **open source** project and any contribution is appreciated, feel free to fork the repository and propose integrations. 
 
 This library is the result of my recent work which is under revision:
 *Head Pose Estimation in the Wild using Convolutional Neural Networks and Adaptive Gradient Methods*
