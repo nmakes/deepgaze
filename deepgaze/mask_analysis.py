@@ -29,6 +29,8 @@ class BinaryMaskAnalyser:
         @param mask the binary image to use in the function
         @return get the number of contours 
         """
+        if(mask is None): return None
+        mask = np.copy(mask) #doing a copy otherwise findContours modify the original(?)
         contours, hierarchy = cv2.findContours(mask, 1, 2)
         if(hierarchy is None): return 0
         else: return len(hierarchy)
@@ -40,6 +42,8 @@ class BinaryMaskAnalyser:
         @param mask the binary image to use in the function
         @return get the x and y center coords of the contour whit the largest area 
         """
+        if(mask is None): return None
+        mask = np.copy(mask)
         contours, hierarchy = cv2.findContours(mask, 1, 2)
         area_array = np.zeros(len(contours)) #contains the area of the contours
         counter = 0
@@ -65,6 +69,8 @@ class BinaryMaskAnalyser:
         @param mask the binary image to use in the function
         @return get the x and y center coords of the contour whit the largest area 
         """
+        if(mask is None): return None
+        mask = np.copy(mask)
         contours, hierarchy = cv2.findContours(mask, 1, 2)
         area_array = np.zeros(len(contours)) #contains the area of the contours
         counter = 0
@@ -85,6 +91,8 @@ class BinaryMaskAnalyser:
         @param mask the binary image to use in the function
         @return get the coords of the upper corner of the rectangle (x, y) and the rectangle size (widht, hight)
         """
+        if(mask is None): return None
+        mask = np.copy(mask)
         contours, hierarchy = cv2.findContours(mask, 1, 2)
         area_array = np.zeros(len(contours)) #contains the area of the contours
         counter = 0
