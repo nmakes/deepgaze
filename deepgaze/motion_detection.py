@@ -51,6 +51,11 @@ class DiffMotionDetector:
             return cv2.cvtColor(self.background_gray, cv2.COLOR_GRAY2BGR)
 
     def returnMask(self, foreground_image, threshold=25):
+        """Return the binary image after the detection process
+ 
+        @param foreground_image the frame to check
+        @param threshold the value used for filtering the pixels after the absdiff
+        """
         if(foreground_image is None): return None
         foreground_gray = cv2.cvtColor(foreground_image, cv2.COLOR_BGR2GRAY)
         delta_image = cv2.absdiff(self.background_gray, foreground_gray)
@@ -58,5 +63,88 @@ class DiffMotionDetector:
         return threshold_image
 
 
+class MogMotionDetector:
+    """Motion is detected through the Mixtures of Gaussian (MOG) 
 
-         
+    This class is the implementation of the article "An Improved 
+    Adaptive Background Mixture Model for Realtime Tracking with 
+    Shadow Detection" by  KaewTraKulPong and Bowden (2008).
+
+    ABSTRACT: Real-time segmentation of moving regions in image 
+    sequences is a fundamental step in many vision systems 
+    including automated visual surveillance, human-machine 
+    interface, and very low-bandwidth telecommunications. A 
+    typical method is background subtraction. Many background 
+    models have been introduced to deal with different problems. 
+    One of the successful solutions to these problems is to use a
+    multi-colour background model per pixel proposed by Grimson 
+    et al [1,2,3]. However, the method suffers from slow learning
+    at the beginning, especially in busy environments. In addition,
+    it can not distinguish between moving shadows and moving objects. 
+    This paper presents a method which improves this adaptive 
+    background mixture model. By reinvestigating the update equations,
+    we utilise different equations at different phases. This allows
+    our system learn faster and more accurately as well as adapt 
+    effectively to changing environments. A shadow detection scheme
+    is also introduced in this paper. It is based on a computational 
+    colour space that makes use of our background model. A comparison
+    has been made between the two algorithms. The results show the 
+    speed of learning and the accuracy of the model using our update 
+    algorithm over the Grimson et al’s tracker. When incorporate with 
+    the shadow detection, our method results in far better segmentation
+    than that of Grimson et al.
+    """
+
+    def __init__(self, history=10, numberMixtures=3, backgroundRatio=0.6, noise=20):
+        """Init the color detector object.
+
+        @param history lenght of the history
+        @param numberMixtures The maximum number of Gaussian Mixture components allowed.
+            Each pixel in the scene is modelled by a mixture of K Gaussian distributions.
+            This value should be a small number from 3 to 5.
+        @param backgroundRation define a threshold which specifies if a component has to be included
+            into the foreground or not. It is the minimum fraction of the background model. 
+            In other words, it is the minimum prior probability that the background is in the scene.
+        @param noise specifies the noise strenght
+        """
+        self.BackgroundSubtractorMOG = cv2.BackgroundSubtractorMOG(history, numberMixtures, backgroundRatio, noise)
+
+
+    def returnMask(self, foreground_image):
+        """Return the binary image after the detection process
+ 
+        @param foreground_image the frame to check
+        @param threshold the value used for filtering the pixels after the absdiff
+        """
+        return self.BackgroundSubtractorMOG.apply(foreground_image)
+
+class Mog2MotionDetector:
+    """Motion is detected through the Imporved Mixtures of Gaussian (MOG) 
+
+    This class is the implementation of the article "Improved Adaptive 
+    Gaussian Mixture Model for Background Subtraction" by Zoran Zivkovic.
+
+    ABSTRACT: Background subtraction is a common computer vision task. 
+    We analyze the usual pixel-level approach. We develop an efficient
+    adaptive algorithm using Gaussian mixture probability density. 
+    Recursive equations are used to constantly update the parameters
+    and but also to simultaneously select the appropriate number of 
+    components for each pixel.
+    """
+
+    def __init__(self, detectShadows = False):
+        """Init the color detector object.
+
+        @param detectShadows specifies if shadows must be detected.
+            If True the output mask will contain gray contours
+            corresponding to the detected shadows.
+        """
+        self.BackgroundSubtractorMOG2 = cv2.BackgroundSubtractorMOG2(detectShadows = detectShadows)
+
+
+    def returnMask(self, foreground_image):
+        """Return the binary image after the detection process
+ 
+        @param foreground_image the frame to check
+        """
+        return self.BackgroundSubtractorMOG2.apply(foreground_image)              
