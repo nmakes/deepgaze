@@ -104,3 +104,23 @@ class BinaryMaskAnalyser:
         cnt = contours[max_area_index]
         (x, y, w, h) = cv2.boundingRect(cnt)
         return (x, y, w, h)
+
+    def returnMaxAreaCircle(self, mask):
+        """it returns the circle sorrounding the contour with the largest area.
+ 
+        @param mask the binary image to use in the function
+        @return get the center (x, y) and the radius of the circle
+        """
+        if(mask is None): return None
+        mask = np.copy(mask)
+        contours, hierarchy = cv2.findContours(mask, 1, 2)
+        area_array = np.zeros(len(contours)) #contains the area of the contours
+        counter = 0
+        for cnt in contours:   
+                area_array[counter] = cv2.contourArea(cnt)
+                counter += 1
+        if(area_array.size==0): return None #the array is empty
+        max_area_index = np.argmax(area_array) #return the index of the max_area element
+        cnt = contours[max_area_index]
+        (x,y),radius = cv2.minEnclosingCircle(cnt)
+        return (int(x),int(y)), int(radius)

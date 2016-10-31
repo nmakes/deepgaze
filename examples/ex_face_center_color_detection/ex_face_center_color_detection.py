@@ -38,13 +38,18 @@ cnt = my_mask_analyser.returnMaxAreaContour(image_mask)
 
 #Uncomment if you want to get the coords of the rectangle sorrounding
 #the largest area contour (in this case the face)
-#x, y, w, h = my_skin_detector.returnMaxAreaRectangle(image_mask)
+#x, y, w, h = my_mask_analyser.returnMaxAreaRectangle(image_mask)
+
+#Uncomment if you want to get the coords of the circle sorrounding
+#the largest area contour (in this case the face)
+#(x, y), radius = my_mask_analyser.returnMaxAreaCircle(image_mask)
 
 #Drawing and displaying
 image_canvas = np.copy(image)
 #Uncomment the line below only if you uncomment also the line
 #with returnMaxAreaRectangle(image_mask) function.
-#cv2.rectangle(image_canvas, (x,y), (x+w,y+h), [255,0,0])
+#cv2.rectangle(image_canvas, (x,y), (x+w,y+h), [255,0,0], 3)
+#cv2.circle(image_canvas, (x,y), radius, (255,0,0), 3)
 cv2.drawContours(image_canvas, [cnt], 0, (0,255,0), 2)
 cv2.circle(image_canvas, (cx, cy), 2, [0, 0,255], 3)
 image_stack = np.hstack((image, image_filtered, image_canvas))
