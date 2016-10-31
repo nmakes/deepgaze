@@ -132,14 +132,11 @@ class Mog2MotionDetector:
     components for each pixel.
     """
 
-    def __init__(self, detectShadows = False):
+    def __init__(self):
         """Init the color detector object.
 
-        @param detectShadows specifies if shadows must be detected.
-            If True the output mask will contain gray contours
-            corresponding to the detected shadows.
         """
-        self.BackgroundSubtractorMOG2 = cv2.BackgroundSubtractorMOG2(detectShadows = detectShadows)
+        self.BackgroundSubtractorMOG2 = cv2.BackgroundSubtractorMOG2()
 
 
     def returnMask(self, foreground_image):
@@ -147,4 +144,18 @@ class Mog2MotionDetector:
  
         @param foreground_image the frame to check
         """
-        return self.BackgroundSubtractorMOG2.apply(foreground_image)              
+        #Since the MOG2 returns shadows with value 127 we have to
+        #filter these values in order to have a binary mask
+        img = self.BackgroundSubtractorMOG2.apply(foreground_image)
+        ret, thresh = cv2.threshold(img, 126, 255,cv2.THRESH_BINARY)
+        return thresh 
+
+    def returnGreyscaleMask(self, foreground_image):
+        """Return the greyscale image after the detection process
+ 
+        The MOG2 can return shadows. The pixels associated with
+        shadows have value 127. This mask is not a classic binary
+        mask since it incorporates the shadow pixels.
+        @param foreground_image the frame to check
+        """
+        return self.BackgroundSubtractorMOG2.apply(foreground_image)            
