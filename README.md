@@ -1,6 +1,9 @@
 Updates
 ----------
 
+**Update 01/11/2016**
+Comparison of three different motion detection algorithms [[example]](./examples/ex_motion_detectors_comparison_video/ex_motion_detectors_comparison_video.py) [[video]](https://www.youtube.com/watch?v=XmI2kE2hUgE)
+
 **Update 28/10/2016**
 New package [motion_detection.py](./deepgaze/motion_detection.py). Using the classes in this package it is possible to track moving objects through [background subtraction](https://en.wikipedia.org/wiki/Background_subtraction). Possible applications of this algorithm are people detection, vehicle detection and tracking [[example]](./examples/ex_diff_motion_detection_video/ex_diff_motion_detection.py)
 
@@ -22,10 +25,10 @@ What is deepgaze?
 ----------
 Deepgaze is a library for peopl detection and tracking which uses **Convolutional Neural Networks** (CNNs) to estimate the Focus of Attention (FOA) of users. The FOA can be approximately estimated finding the **head orientation**. This is particularly useful when the eyes are covered, or when the user is too far from the camera to grab the eye region with a good resolution. When the eye region is visible it is possible to estimate the **gaze direction**, which is much more informative and can give a good indication of the FOA. Deepgaze contains useful packages for:
 
-- Head pose estimation (Pnp, Convolutional Neural Networks)
+- Head pose estimation (Perspective-n-Point, Convolutional Neural Networks)
 - Face detection and tracking (Haar Cascade)
 - Skin and color detection (Range detection, Backprojection) 
-- Motion detection and tracking (Frame differencing) 
+- Motion detection and tracking (Frame differencing, MOG, MOG2) 
 
 Deepgaze is based on OpenCV and Tensorflow, some of the best libraries in computer vision and machine learning. Deepgaze is an **open source** project and any contribution is appreciated, feel free to fork the repository and propose integrations. 
 
@@ -122,10 +125,16 @@ Examples
 <img src="doc/images/ex_face_center_color_detection.png" width="750">
 </p>
 
-- Motion detection and tracking using frame differencing [[code]](./examples/ex_diff_motion_detection_video/ex_diff_motion_detection.py)
+- Motion detection and tracking using frame differencing on a video streaming [[code]](./examples/ex_diff_motion_detection_video/ex_diff_motion_detection.py)
 
 <p align="center">
 <img src="doc/images/ex_diff_motion_detection_video.png" width="750">
+</p>
+
+- Motion detection and tracking comparison of three algorithms on a video streaming [[code]](./examples/ex_motion_detectors_comparison_video/ex_motion_detectors_comparison_video.py) [[video]](https://www.youtube.com/watch?v=XmI2kE2hUgE)
+
+<p align="center">
+<img src="doc/images/ex_motion_detectors_comparison_video.png" width="750">
 </p>
 
 Acknowledgments
