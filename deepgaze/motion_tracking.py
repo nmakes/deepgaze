@@ -178,5 +178,15 @@ class ParticleFilter:
         else:
             return self.particles[index,:].astype(int)
 
+    def drawParticles(self, frame, color=[0,0,255], radius=2):
+        """Draw the particles on a frame and return it.
+ 
+        @param frame the image to draw
+        @param color the color in BGR format, ex: [0,0,255] (red)
+        @param radius is the radius of the particles
+        @return the frame with particles
+        """
+        for x_particle, y_particle in self.particles.astype(int):
+            cv2.circle(frame, (x_particle, y_particle), radius, color, -1) #RED: Particles
 
 
