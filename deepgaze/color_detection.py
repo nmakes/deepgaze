@@ -98,7 +98,7 @@ class BackProjectionColorDetector:
         #Get the threshold
         ret, frame_threshold = cv2.threshold(frame_hsv, 50, 255, 0)
         #Merge the threshold matrices
-        return cv2.merge((frame_threshold,frame_threshold,frame_threshold))
+        return frame_threshold
 
 class RangeColorDetector:
     """Using this detector it is possible to isolate colors in a specified range.
