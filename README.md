@@ -1,6 +1,9 @@
 Updates
 ----------
 
+**Update 04/11/2016**
+New package [motion_tracking.py](./deepgaze/motion_tracking.py). The package contains an implementation of [Particle Filter](https://en.wikipedia.org/wiki/Particle_filter), which can be used to follow a target in presence of noisy measurements [[example]](./examples/ex_particle_filter_object_tracking_video/ex_particle_filter_object_tracking_video.py) [[video]](https://www.youtube.com/watch?v=KTxVBN5-KpE)
+
 **Update 01/11/2016**
 Comparison of three different motion detection algorithms [[example]](./examples/ex_motion_detectors_comparison_video/ex_motion_detectors_comparison_video.py) [[video]](https://www.youtube.com/watch?v=XmI2kE2hUgE)
 
@@ -23,12 +26,13 @@ Work in progress. The code provided at the moment does not still implement gaze 
 
 What is deepgaze?
 ----------
-Deepgaze is a library for peopl detection and tracking which uses **Convolutional Neural Networks** (CNNs) to estimate the Focus of Attention (FOA) of users. The FOA can be approximately estimated finding the **head orientation**. This is particularly useful when the eyes are covered, or when the user is too far from the camera to grab the eye region with a good resolution. When the eye region is visible it is possible to estimate the **gaze direction**, which is much more informative and can give a good indication of the FOA. Deepgaze contains useful packages for:
+Deepgaze is a library for people detection and tracking which uses **Convolutional Neural Networks** (CNNs) to estimate the Focus of Attention (FOA) of users. The FOA can be approximately estimated finding the **head orientation**. This is particularly useful when the eyes are covered, or when the user is too far from the camera to grab the eye region with a good resolution. When the eye region is visible it is possible to estimate the **gaze direction**, which is much more informative and can give a good indication of the FOA. Deepgaze contains useful packages for:
 
 - Head pose estimation (Perspective-n-Point, Convolutional Neural Networks)
 - Face detection (Haar Cascade)
 - Skin and color detection (Range detection, Backprojection)
 - Motion detection (Frame differencing, MOG, MOG2)
+- Motion tracking (Particle filter)
 
 Deepgaze is based on OpenCV and Tensorflow, some of the best libraries in computer vision and machine learning. Deepgaze is an **open source** project and any contribution is appreciated, feel free to fork the repository and propose integrations. 
 
@@ -137,10 +141,17 @@ Examples
 <img src="doc/images/ex_motion_detectors_comparison_video.png" width="750">
 </p>
 
+- Motion tracking with unstable measurement using Particle Filter [[code]](./examples/ex_particle_filter_object_tracking_video/ex_particle_filter_object_tracking_video.py) [[video]](https://www.youtube.com/watch?v=KTxVBN5-KpE)
+<p align="center">
+<img src="doc/images/ex_particle_filtering_object_tracking_video.png" width="750">
+</p>
+
 Acknowledgments
 ---------------
 
 The example "head pose estimation using Perspective-n-Point" is partially based on the C++ version you can find [here](https://github.com/severin-lemaignan/gazr), and on the workshop "Developing an attention system for a social robot" which was part of the 2nd International Summer School on Social Human-Robot Interaction.
+
+To implement the Bayes and Particle Filters I followed the great repository of [rlabbe](https://github.com/rlabbe) which you can find [here](https://github.com/rlabbe/Kalman-and-Bayesian-Filters-in-Python)
 
 
 
