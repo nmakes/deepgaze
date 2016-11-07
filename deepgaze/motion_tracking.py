@@ -113,23 +113,32 @@ class ParticleFilter:
         #y_var = int(var[1])
         return x_mean, y_mean, 0, 0
 
-    def resample(self, method='multinomal'):
+    def resample(self, method='residual'):
         """Resample the particle based on their weights.
  
-        After a while some particles are useless because they
-        do not represent the point position anymore. Eventually
-        they will be too far away from the real position.
-        To solve the problem it is necessary to call the resample
-        function which remove useless particles and keep the
+        The resempling (or importance sampling) draws with replacement N
+        particles from the current set with a probability given by the current
+        weights. The new set generated has always size N, and it is an
+        approximation of the posterior distribution which represent the state
+        of the particles at time t. The new set will have many duplicates 
+        corresponding to the particles with highest weight. The resampling
+        solve a huge problem: after some iterations of the algorithm
+        some particles are useless because they do not represent the point 
+        position anymore, eventually they will be too far away from the real position.
+        The resample function removes useless particles and keep the
         useful ones. It is not necessary to resample at every epoch.
         If there are not new measurements then there is not any information 
         from which the resample can benefit. To determine when to resample 
         it can be used the returnParticlesContribution function.
-        @param method the algorithm to use for the resempling.
-            The Default value is 'multinomal' which is a O(n*log(n)) algorithm
+        @param method the algorithm to use for the resampling.
+            'multinomal' large weights are more likely to be selected [complexity O(n*log(n))]
+            'residual' (default value) it ensures that the sampling is uniform across particles [complexity O(N)]
+            'stratified' it divides the cumulative sum into N equal subsets, and then 
+                selects one particle randomly from each subset.
+            'systematic' it divides the cumsum into N subsets, then add a random offset to all the susets
         """
+        N = len(self.particles)
         if(method == 'multinomal'):
-            N = len(self.particles)
             #np.cumsum() computes the cumulative sum of an array. 
             #Element one is the sum of elements zero and one, 
             #element two is the sum of elements zero, one and two, etc.
@@ -142,15 +151,56 @@ class ParticleFilter:
             #more space than low weights, so they will be more likely 
             #to be selected.
             indices = np.searchsorted(cumulative_sum, np.random.uniform(low=0.0, high=1.0, size=N))      
-            #Create a new set of particles by randomly choosing particles 
-            #from the current set according to their weights.
-            self.particles[:] = self.particles[indices] #resample according to indexes
-            self.weights[:] = self.weights[indices]
-            #Normalize the new set of particles
-            self.weights /= np.sum(self.weights)
+        elif(method == 'residual'):
+            indices = np.zeros(N, dtype=np.int32)
+            # take int(N*w) copies of each weight
+            num_copies = (N*np.asarray(self.weights)).astype(int)
+            k = 0
+            for i in range(N):
+                for _ in range(num_copies[i]): # make n copies
+                    indices[k] = i
+                    k += 1
+            #multinormial resample
+            residual = self.weights - num_copies     # get fractional part
+            residual /= sum(residual)     # normalize
+            cumulative_sum = np.cumsum(residual)
+            cumulative_sum[-1] = 1. # ensures sum is exactly one
+            indices[k:N] = np.searchsorted(cumulative_sum, np.random.random(N-k))
+        elif(method == 'stratified'):
+            #N subsets, chose a random position within each one
+            #and generate a vector containing this positions
+            positions = (np.random.random(N) + range(N)) / N
+            #generate the empty indices vector
+            indices = np.zeros(N, dtype=np.int32)
+            #get the cumulative sum
+            cumulative_sum = np.cumsum(self.weights)
+            i, j = 0, 0
+            while i < N:
+                if positions[i] < cumulative_sum[j]:
+                    indices[i] = j
+                    i += 1
+                else:
+                    j += 1
+        elif(method == 'systematic'):
+            # make N subsets, choose positions with a random offset
+            positions = (np.arange(N) + np.random.random()) / N
+            indices = np.zeros(N, dtype=np.int32)
+            cumulative_sum = np.cumsum(self.weights)
+            i, j = 0, 0
+            while i < N:
+                if positions[i] < cumulative_sum[j]:
+                    indices[i] = j
+                    i += 1
+                else:
+                    j += 1
         else:
             raise ValueError("[DEEPGAZE] motion_tracking.py: the resempling method selected '" + str(method) + "' is not implemented")
-        
+        #Create a new set of particles by randomly choosing particles 
+        #from the current set according to their weights.
+        self.particles[:] = self.particles[indices] #resample according to indices
+        self.weights[:] = self.weights[indices]
+        #Normalize the new set of particles
+        self.weights /= np.sum(self.weights)        
 
     def returnParticlesContribution(self):
         """This function gives an estimation of the number of particles which are
