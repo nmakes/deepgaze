@@ -27,8 +27,17 @@ from deepgaze.color_detection import BackProjectionColorDetector
 from deepgaze.mask_analysis import BinaryMaskAnalyser
 from deepgaze.motion_tracking import ParticleFilter
 
+#Set to true if you want to use the webcam instead of the video.
+#In this case you have to provide a valid tamplate, it can be
+#a solid color you want to track or a frame containint your face.
+#Substitute the frame to the default template.png.
+USE_WEBCAM = False
+
 template = cv2.imread('template.png') #Load the image
-video_capture = cv2.VideoCapture("./cows.avi")
+if(USE_WEBCAM == False):
+    video_capture = cv2.VideoCapture("./cows.avi")
+else:
+    video_capture = cv2.VideoCapture(0) #Open the webcam
 # Define the codec and create VideoWriter object
 fourcc = cv2.cv.CV_FOURCC(*'XVID')
 out = cv2.VideoWriter("./cows_output.avi", fourcc, 25.0, (1920,1080))
