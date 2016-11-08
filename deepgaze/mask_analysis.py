@@ -84,6 +84,49 @@ class BinaryMaskAnalyser:
         cnt = contours[max_area_index]
         return cnt #return the max are contour
 
+    def drawMaxAreaContour(self, frame, mask, color=[0,255,0], thickness=3):
+        """it draws the contour with largest area.
+ 
+        @param frame the image to use as canvas
+        @param mask the binary image to use in the function
+        @param color the color of the contour
+        @param thickness of the contour 
+        """
+       ctn = self.returnMaxAreaContour(mask)
+       cv2.drawContours(frame, ctn, -1, color, thickness)
+
+
+    #TODO Return the orientation (clockwise or ccw) of a contour
+    #def returnMaxAreaOrientation():
+    #It can be done using the flag oriented to True.
+    #oriented – Oriented area flag. If it is true, the function returns 
+    #a signed area value, depending on the contour orientation (clockwise or counter-clockwise). 
+    #Using this feature you can determine orientation of a contour by taking the sign of an area. 
+    #By default, the parameter is false, which means that the absolute value is returned.
+    #cv2.contourArea(contour[, oriented]) → retval
+
+    def matchMaxAreaWithShape(self, mask, shape):
+        """it returns a value which identify the similarity between
+            the largest area contour and a shape.
+ 
+        The lower the result, the better match it is. It is calculated 
+        based on the hu-moment values. For example if we have three shapes:
+        A=star, B=rotated dilatated star, C=square
+        Matching Image A with itself = 0.0
+        Matching Image A with Image B = 0.001946
+        Matching Image A with Image C = 0.326911
+        @param mask the binary image to use in the function
+        @param shape the contour to compare
+        """        
+        ctn = self.returnMaxAreaContour(mask)
+        return cv2.matchShapes(cnt, shape, 1, 0.0)
+
+
+    #TODO returns the Convex Hull of the contour with largest area.
+    #X is a bounded subset of the plane, the convex hull may be visualized
+    # as the shape formed by a rubber band stretched around X.
+    #def returnMaxAreaConvexHull(self, mask):
+
     def returnMaxAreaRectangle(self, mask):
         """it returns the rectangle sorrounding the contour with the largest area.
  
@@ -105,6 +148,17 @@ class BinaryMaskAnalyser:
         (x, y, w, h) = cv2.boundingRect(cnt)
         return (x, y, w, h)
 
+    def drawMaxAreaRectangle(self, frame, mask, color=[0,255,0], thickness=3):
+        """it draws the rectangle with largest area.
+ 
+        @param frame the image to use as canvas
+        @param mask the binary image to use in the function
+        @param color the color of the rectangle
+        @param thickness of the rectangle
+        """
+       x, y, w, h = self.returnMaxAreaRectangle(mask)
+       cv2.rectangle(frame, (x,y), (x+w,y+h), color, thickness)
+
     def returnMaxAreaCircle(self, mask):
         """it returns the circle sorrounding the contour with the largest area.
  
@@ -124,3 +178,15 @@ class BinaryMaskAnalyser:
         cnt = contours[max_area_index]
         (x,y),radius = cv2.minEnclosingCircle(cnt)
         return (int(x),int(y)), int(radius)
+
+    def drawMaxAreaCircle(self, frame, mask, color=[0,255,0], thickness=3):
+        """it draws the circle with largest area.
+ 
+        @param frame the image to use as canvas
+        @param mask the binary image to use in the function
+        @param color the color of the circle
+        @param thickness of the circle
+        """
+       x, y, r = self.returnMaxAreaCircle(mask)
+       cv2.circle(frame, (x,y), r, color, thickness)
+
