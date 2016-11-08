@@ -141,17 +141,22 @@ Examples
 <img src="doc/images/ex_motion_detectors_comparison_video.png" width="750">
 </p>
 
-- Motion tracking with unstable measurement using Particle Filter [[code]](./examples/ex_particle_filter_object_tracking_video/ex_particle_filter_object_tracking_video.py) [[video]](https://www.youtube.com/watch?v=KTxVBN5-KpE)
+- Motion tracking with unstable measurements using Particle Filter [[code]](./examples/ex_particle_filter_object_tracking_video/ex_particle_filter_object_tracking_video.py) [[video]](https://www.youtube.com/watch?v=KTxVBN5-KpE)
 <p align="center">
 <img src="doc/images/ex_particle_filtering_object_tracking_video.png" width="750">
+</p>
+
+- Motion tracking with multiple backprojection for playing chrome's dinosaur game [[code]](./examples/ex_multi_backprojection_hand_tracking_gaming.py) [[video]](https://www.youtube.com/watch?v=eoUOkV5vVpU&feature=youtu.be)
+<p align="center">
+<img src="doc/images/ex_multi_backprojection_hand_tracking_gaming.gif" width="750">
 </p>
 
 Acknowledgments
 ---------------
 
-The example "head pose estimation using Perspective-n-Point" is partially based on the C++ version you can find [here](https://github.com/severin-lemaignan/gazr), and on the workshop "Developing an attention system for a social robot" which was part of the 2nd International Summer School on Social Human-Robot Interaction.
+- The example "head pose estimation using Perspective-n-Point" is partially based on the C++ version you can find [here](https://github.com/severin-lemaignan/gazr), and on the workshop "Developing an attention system for a social robot" which was part of the 2nd International Summer School on Social Human-Robot Interaction.
 
-To implement the Bayes and Particle Filters I followed the great repository of [rlabbe](https://github.com/rlabbe) which you can find [here](https://github.com/rlabbe/Kalman-and-Bayesian-Filters-in-Python)
+- To implement the Bayes and Particle Filters I followed the great repository of [rlabbe](https://github.com/rlabbe) which you can find [here](https://github.com/rlabbe/Kalman-and-Bayesian-Filters-in-Python)
 
 
 
