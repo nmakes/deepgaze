@@ -148,7 +148,7 @@ Examples
 
 - Motion tracking with multiple backprojection for playing chrome's dinosaur game [[code]](./examples/ex_multi_backprojection_hand_tracking_gaming.py) [[video]](https://www.youtube.com/watch?v=eoUOkV5vVpU&feature=youtu.be)
 <p align="center">
-<img src="doc/images/ex_multi_backprojection_hand_tracking_gaming.gif" width="750">
+<img src="doc/images/ex_multi_backprojection_hand_tracking_gaming.gif" width="650">
 </p>
 
 Acknowledgments
