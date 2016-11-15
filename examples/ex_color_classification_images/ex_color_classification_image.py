@@ -19,16 +19,18 @@ import numpy as np
 from matplotlib import pyplot as plt
 from deepgaze.color_classification import HistogramColorClassifier
 
-my_classifier = HistogramColorClassifier(channels=[0, 1, 2], hist_size=[10, 10, 10], bins_range=[0, 256, 0, 256, 0, 256])
+my_classifier = HistogramColorClassifier(channels=[0, 1, 2], hist_size=[128, 128, 128], hist_range=[0, 256, 0, 256, 0, 256], hist_type='BGR')
 
-model_1 = cv2.imread('model_1_c.jpg')
-model_2 = cv2.imread('model_2_c.jpg')
-model_3 = cv2.imread('model_3_c.jpg')
-model_4 = cv2.imread('model_4_c.jpg')
-model_5 = cv2.imread('model_5_c.jpg')
-model_6 = cv2.imread('model_6_c.jpg')
-model_7 = cv2.imread('model_7_c.jpg')
-model_8 = cv2.imread('model_8_c.jpg')
+model_1 = cv2.imread('model_1a.png') #Flash
+model_2 = cv2.imread('model_2a.png') #Batman
+model_3 = cv2.imread('model_3a.png') #Hulk
+model_4 = cv2.imread('model_4a.png') #Superman
+model_5 = cv2.imread('model_5a.png') #Capt. America
+model_6 = cv2.imread('model_6a.png') #Wonder Woman
+model_7 = cv2.imread('model_7a.png') #Iron Man
+model_8 = cv2.imread('model_8a.png') #Wolverine
+#model_9 = cv2.imread('model_9_c.png') #Thor
+#model_10 = cv2.imread('model_10_c.png') #Magneto
 
 my_classifier.addModelHistogram(model_1)
 my_classifier.addModelHistogram(model_2)
@@ -38,31 +40,38 @@ my_classifier.addModelHistogram(model_5)
 my_classifier.addModelHistogram(model_6)
 my_classifier.addModelHistogram(model_7)
 my_classifier.addModelHistogram(model_8)
+#my_classifier.addModelHistogram(model_9)
+#my_classifier.addModelHistogram(model_10)
 
-image = cv2.imread('model_1.jpg') #Load the image
-comparison_array = my_classifier.returnHistogramComparisonArray(image, method="correlation")
-
-
-#model_hist = cv2.calcHist([model_1], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
-#model_hist = cv2.normalize(model_hist).flatten()
-#image_hist = cv2.calcHist([image], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
-#image_hist = cv2.normalize(image_hist).flatten()
-#comparison = my_classifier.returnHistogramComparison(model_hist, image_hist, method='intersection')
-
-#image_hist = cv2.calcHist([image], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
-#image_hist = cv2.normalize(image_hist).flatten()
-#plt.hist(image_hist.ravel(),256,[0,256]); plt.show()
-
-#model_hist = cv2.calcHist([model_1], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
-#model_hist = cv2.normalize(model_hist).flatten()
-#comp = cv2.compareHist(image_hist, model_hist, cv2.cv.CV_COMP_INTERSECT)
-#print(comp)
+image = cv2.imread('image_2.jpg') #Load the image
+comparison_array = my_classifier.returnHistogramComparisonArray(image, method="intersection")
+comparison_distribution = my_classifier.returnHistogramComparisonProbability(image, method="intersection")
 
 print(comparison_array)
+print("Distribution: ")
+print(comparison_distribution)
+
+width = 0.5 
+plt.barh(np.arange(8), comparison_distribution, width, color='r')
+plt.yticks(np.arange(8) + width/2., ('Flash', 'Batman', 'Hulk', 'Superman', 'Capt. America', 'Wonder Woman', 'Iron Man', 'Wolverine'), rotation=0, size=25)
+plt.xlim(0.0, 1.0)
+plt.ylim(-0.5, 8.0)
+plt.xlabel('Probability', size=25)
 
 
+#ax = plt.axes()
+#ax.arrow(0, 0, 0.5, 0.5, head_width=0.05, head_length=0.1, fc='k', ec='k')
 
+# the histogram of the data
+#n, bins, patches = plt.hist(comparison_distribution, bins=8, histtype='bar', facecolor='green', alpha=0.75)
+#hist, bins = np.histogram(comparison_distribution, bins=8)
+#labels = ['Frogs', 'Hogs', 'Bogs', 'Slogs', 'Frogs', 'Hogs', 'Bogs', 'Slogs']
+#plt.xticks(range(1,9), labels, rotation='vertical')
+#width = 0.7 * (bins[1] - bins[0])
+#center = (bins[:-1] + bins[1:]) / 2
+#plt.bar(center, hist, align='center', width=width)
 
+plt.show()
 
 
 

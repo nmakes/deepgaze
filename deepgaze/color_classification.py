@@ -68,6 +68,7 @@ class HistogramColorClassifier:
         """
         if(self.hist_type=='HSV'): model_frame = cv2.cvtColor(model_frame, cv2.COLOR_BGR2HSV)
         elif(self.hist_type=='GRAY'): model_frame = cv2.cvtColor(model_frame, cv2.COLOR_BGR2GRAY)
+        elif(self.hist_type=='RGB'): model_frame = cv2.cvtColor(model_frame, cv2.COLOR_BGR2RGB)
         hist = cv2.calcHist([model_frame], self.channels, None, self.hist_size, self.hist_range)
         hist = cv2.normalize(hist).flatten()
         self.model_list.append(hist)
@@ -85,6 +86,10 @@ class HistogramColorClassifier:
             comparison = cv2.compareHist(hist_1, hist_2, cv2.cv.CV_COMP_INTERSECT)
         elif(method=="correlation"):
             comparison = cv2.compareHist(hist_1, hist_2, cv2.cv.CV_COMP_CORREL)
+        elif(method=="chisqr"):
+            comparison = cv2.compareHist(hist_1, hist_2, cv2.cv.CV_COMP_CHISQR)
+        elif(method=="bhattacharyya"):
+            comparison = cv2.compareHist(hist_1, hist_2, cv2.cv.CV_COMP_BHATTACHARYYA)
         else:
             raise ValueError('[DEEPGAZE] color_classification.py: the method specified ' + str(method) + ' is not supported.')
         return comparison
@@ -100,6 +105,7 @@ class HistogramColorClassifier:
         """
         if(self.hist_type=='HSV'): image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         elif(self.hist_type=='GRAY'): image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        elif(self.hist_type=='RGB'): image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         comparison_array = np.zeros(len(self.model_list))
         image_hist = cv2.calcHist([image], self.channels, None, self.hist_size, self.hist_range)
         image_hist = cv2.normalize(image_hist).flatten()
@@ -121,6 +127,7 @@ class HistogramColorClassifier:
         @return a numpy array containg the comparison value between each pair image-model
         """
         comparison_array = self.returnHistogramComparisonArray(image=image, method=method)
+        #comparison_array[comparison_array < 0] = 0 #Remove negative values
         comparison_distribution = np.divide(comparison_array, np.sum(comparison_array))
         return comparison_distribution
 
