@@ -8,17 +8,17 @@
 #CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
 #SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#In this example the Backprojection algorithm is used in order to find the pixels that have the same
-#HSV histogram of a predefined template. The template is a subframe of the main image or an external
-#matrix that can be used as a filter. In this example I take a subframe of the main image (the tiger
-# fur) and I use it for obtaining a filtered version of the original frame. A green rectangle shows
-#where the subframe is located.
+#In this example the histogram intersection algorithm is used in order
+#to classify eight different superheroes. The histogram intersection is
+#one of the simplest classifier and it uses histograms as 
+#comparison to identify the best match between an input image and a model.
 
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 from deepgaze.color_classification import HistogramColorClassifier
 
+#Defining the classifier
 my_classifier = HistogramColorClassifier(channels=[0, 1, 2], hist_size=[128, 128, 128], hist_range=[0, 256, 0, 256, 0, 256], hist_type='BGR')
 
 model_1 = cv2.imread('model_1a.png') #Flash
@@ -44,40 +44,23 @@ my_classifier.addModelHistogram(model_8)
 #my_classifier.addModelHistogram(model_10)
 
 image = cv2.imread('image_2.jpg') #Load the image
+#Get a numpy array which contains the comparison values
+#between the model and the input image
 comparison_array = my_classifier.returnHistogramComparisonArray(image, method="intersection")
-comparison_distribution = my_classifier.returnHistogramComparisonProbability(image, method="intersection")
+#Normalisation of the array
+comparison_distribution = comparison_array / np.sum(comparison_array)
 
+#Printing the arrays
+print("Comparison Array:"
 print(comparison_array)
-print("Distribution: ")
+print("Distribution Array: ")
 print(comparison_distribution)
 
+#Plotting a bar chart with the probability distribution
 width = 0.5 
 plt.barh(np.arange(8), comparison_distribution, width, color='r')
 plt.yticks(np.arange(8) + width/2., ('Flash', 'Batman', 'Hulk', 'Superman', 'Capt. America', 'Wonder Woman', 'Iron Man', 'Wolverine'), rotation=0, size=25)
 plt.xlim(0.0, 1.0)
 plt.ylim(-0.5, 8.0)
 plt.xlabel('Probability', size=25)
-
-
-#ax = plt.axes()
-#ax.arrow(0, 0, 0.5, 0.5, head_width=0.05, head_length=0.1, fc='k', ec='k')
-
-# the histogram of the data
-#n, bins, patches = plt.hist(comparison_distribution, bins=8, histtype='bar', facecolor='green', alpha=0.75)
-#hist, bins = np.histogram(comparison_distribution, bins=8)
-#labels = ['Frogs', 'Hogs', 'Bogs', 'Slogs', 'Frogs', 'Hogs', 'Bogs', 'Slogs']
-#plt.xticks(range(1,9), labels, rotation='vertical')
-#width = 0.7 * (bins[1] - bins[0])
-#center = (bins[:-1] + bins[1:]) / 2
-#plt.bar(center, hist, align='center', width=width)
-
 plt.show()
-
-
-
-
-
-
-
-
-
