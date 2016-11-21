@@ -8,23 +8,16 @@
 #CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
 #SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#In this example the Backprojection algorithm is used in order to find the pixels that have the same
-#HSV histogram of a predefined template. The template is a subframe of the main image or an external
-#matrix that can be used as a filter. In this example I take a subframe of the main image (the tiger
-# fur) and I use it for obtaining a filtered version of the original frame. A green rectangle shows
-#where the subframe is located.
+#In this example I plot the result of the intersection between 
+#two histograms. The histogram intersection has been introduced
+#by Ballard and Swain in their article "Color Indexing".
 
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
-#def histogram_intersection(image, model):
-#    I = np.histogram(image)
-#    M = np.histogram(model)
-#    minima = np.minimum(I, M)
-#    intersection = np.sum(minima) / numpy.sum(M)
-#    return intersection
-
+#Formula for estimating the intersection in
+#two one-dimensional histograms
 def histogram_intersection(hist_1, hist_2):
     minima = np.minimum(hist_1, hist_2)
     intersection = np.true_divide(np.sum(minima), np.sum(hist_2))
@@ -33,31 +26,30 @@ def histogram_intersection(hist_1, hist_2):
 def main():
 
     bins_number = 100
-    model_1 = cv2.imread('model_3.png', 0)
-    #rng = np.random.RandomState(10)  # deterministic random data
-    #a = np.hstack((rng.normal(size=1000), rng.normal(loc=5, scale=2, size=1000)))
-    mu_1 = 0
-    mu_2 = 0
+    #Changing the mean value you can manage to get the two
+    #histograms. If mu_1==mu_2 then the intersection is close 
+    #to 1 more the two values are different more the intersection
+    #is close to zero.
+    mu_1 = -2
+    mu_2 = 2
     data_1 = np.random.normal(mu_1, 2.0, 1000) #RED
     data_2 = np.random.normal(mu_2, 2.0, 1000) #GREEN
     hist_1, bin_edges_1 = np.histogram(data_1, bins=bins_number, range=[-15, 15])
     hist_2, bin_edges_2 = np.histogram(data_2, bins=bins_number, range=[-15, 15])
 
+    #Find the intersection and print the value
     intersection = histogram_intersection(hist_1, hist_2)
+    print("Intersection Value: " + str(intersection))
 
-    print(hist_1)
-    print(hist_2)
-    print(intersection)
-
-
-    #plt.fill(np.arange(bins_number), hist_1, 'Crimson')
+    #Display the graph using matplotlib
+    font_size = 20
     plt.bar(np.arange(bins_number), hist_1, 1, color='r', alpha=0.2)
     plt.bar(np.arange(bins_number), hist_2, 1, color='b', alpha=0.2)
-    #plt.hist(hist, bins=bins_number)  # plt.hist passes it's arguments to np.histogram
-    plt.title("Histogram Intersection", size=35)
-    plt.xlabel('bins', size=35)
-    plt.ylabel('number of elements', size=35)
+    plt.title("Histogram Intersection", size=font_size)
+    plt.xlabel('bins', size=font_size)
+    plt.ylabel('number of elements', size=font_size)
     plt.show()
 
 
-if __name__ == "__main__": main()
+if __name__ == "__main__": 
+    main()
