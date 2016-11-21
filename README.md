@@ -156,7 +156,7 @@ Examples
 
 - Classify object using their colour fingerprint (histogram intersection) [[blog]](https://mpatacchiola.github.io/blog/2016/11/12/the-simplest-classifier-histogram-intersection.html) [[code]](./examples/ex_color_classification_image.py)
 <p align="center">
-<img src="doc/images/ironman_b_histogram_intersection.png" width="600">
+<img src="doc/images/ex_color_classification_images.png" width="600">
 </p>
 
 Acknowledgments
