@@ -2,7 +2,7 @@ Updates
 ----------
 
 **Update 21/11/2016**
-New package [color_classification.py](./deepgaze/color_classification.py). The package contains an implementation of the histogram intersection algorithm for colour classification [example](./examples/ex_color_classification_images/ex_color_classification_image.py). Read more on [my blog post](https://mpatacchiola.github.io/blog/2016/11/12/the-simplest-classifier-histogram-intersection.html).
+New package [color_classification.py](./deepgaze/color_classification.py). The package contains an implementation of the histogram intersection algorithm for colour classification [[example]](./examples/ex_color_classification_images/ex_color_classification_image.py). Read more on [my blog post](https://mpatacchiola.github.io/blog/2016/11/12/the-simplest-classifier-histogram-intersection.html).
 
 **Update 04/11/2016**
 New package [motion_tracking.py](./deepgaze/motion_tracking.py). The package contains an implementation of [Particle Filter](https://en.wikipedia.org/wiki/Particle_filter), which can be used to follow a target in presence of noisy measurements [[example]](./examples/ex_particle_filter_object_tracking_video/ex_particle_filter_object_tracking_video.py) [[video]](https://www.youtube.com/watch?v=KTxVBN5-KpE)
@@ -156,7 +156,7 @@ Examples
 
 - Classify object using their colour fingerprint (histogram intersection) [[blog]](https://mpatacchiola.github.io/blog/2016/11/12/the-simplest-classifier-histogram-intersection.html) [[code]](./examples/ex_color_classification_image.py)
 <p align="center">
-<img src="doc/images/ex_multi_backprojection_hand_tracking_gaming.gif" width="600">
+<img src="doc/images/ironman_b_histogram_intersection.png" width="600">
 </p>
 
 Acknowledgments
