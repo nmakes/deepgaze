@@ -149,7 +149,7 @@ class MultiBackProjectionColorDetector:
         """
         if(len(self.template_hsv_list) == 0): return None
         #Get the mask from the internal function
-        frame_threshold = self.returnMask(frame, morph_opening=morph_opening, blur=blur, kernel_size=kernel_siz, iterations=iterations)
+        frame_threshold = self.returnMask(frame, morph_opening=morph_opening, blur=blur, kernel_size=kernel_size, iterations=iterations)
         #Return the AND image
         return cv2.bitwise_and(frame, frame_threshold)
 
