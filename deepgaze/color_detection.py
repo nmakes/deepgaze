@@ -98,7 +98,7 @@ class BackProjectionColorDetector:
         #Get the threshold
         ret, frame_threshold = cv2.threshold(frame_hsv, 50, 255, 0)
         #Merge the threshold matrices
-        return frame_threshold
+        return cv2.merge((frame_threshold,frame_threshold,frame_threshold))
 
 class MultiBackProjectionColorDetector:
     """Implementation of the Histogram Backprojection algorithm with multi-template.
@@ -166,10 +166,10 @@ class MultiBackProjectionColorDetector:
         mask = np.zeros((frame.shape[0], frame.shape[1]))
         for template_hsv in self.template_hsv_list:
             #Set the template histogram
-            template_hist = cv2.calcHist([template_hsv],[0, 1], None, [180, 256], [0, 180, 0, 256] )
+            template_hist = cv2.calcHist([template_hsv],[0, 1], None, [256, 256], [0, 256, 0, 256] )
             #Normalize the template histogram and apply backprojection
             cv2.normalize(template_hist, template_hist, 0, 255, cv2.NORM_MINMAX)
-            frame_hsv_back = cv2.calcBackProject([frame_hsv], [0,1], template_hist, [0,180,0,256], 1)
+            frame_hsv_back = cv2.calcBackProject([frame_hsv], [0,1], template_hist, [0,256,0,256], 1)
             #Get the kernel and apply a convolution
             kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size,kernel_size))
             frame_hsv_clean = cv2.filter2D(frame_hsv_back, -1, kernel)
@@ -184,11 +184,14 @@ class MultiBackProjectionColorDetector:
             ret, frame_hsv_threshold = cv2.threshold(frame_hsv_clean, 50, 255, 0)
             mask = np.add(mask, frame_hsv_threshold) #Add the threshold to the mask
 
+
         #Normalize the mask because it contains
         #values added during the previous loop
-        cv2.normalize(mask, mask, 0, 255, cv2.NORM_MINMAX)
+        #Attention: here it is not necessary to normalize because the astype(np.uint8) method
+        #will resize to 255 each value which is higher that that...
+        #cv2.normalize(mask, mask, 0, 255, cv2.NORM_MINMAX) #Not necessary
         ret, mask = cv2.threshold(mask.astype(np.uint8), 50, 255, 0)
-        return mask.astype(np.uint8)
+        return cv2.merge((mask,mask,mask))
 
 class RangeColorDetector:
     """Using this detector it is possible to isolate colors in a specified range.
