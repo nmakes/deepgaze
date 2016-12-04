@@ -114,7 +114,7 @@ Examples
 <img src="doc/images/ex_cnn_head_pose_estimation_images.png" width="750">
 </p>
 
-- Color detection using the Histogram Backprojection algorithm [[code]](./examples/ex_color_detection_image/ex_color_detection_image.py)
+- Color detection using the Histogram Backprojection algorithm [[blog]](https://mpatacchiola.github.io/blog/2016/12/01/playing-the-google-chrome-dinosaur-game-with-your-hand.html) [[code]](./examples/ex_color_detection_image/ex_color_detection_image.py)
 
 <p align="center">
 <img src="doc/images/ex_color_detection_image.png" width="750">
@@ -149,14 +149,14 @@ Examples
 <img src="doc/images/ex_particle_filtering_object_tracking_video.png" width="750">
 </p>
 
-- Motion tracking with multiple backprojection for playing chrome's dinosaur game [[code]](./examples/ex_multi_backprojection_hand_tracking_gaming.py) [[video]](https://www.youtube.com/watch?v=eoUOkV5vVpU&feature=youtu.be)
+- Motion tracking with multiple backprojection for playing chrome's dinosaur game [[blog]](https://mpatacchiola.github.io/blog/2016/12/01/playing-the-google-chrome-dinosaur-game-with-your-hand.html) [[code]](./examples/ex_multi_backprojection_hand_tracking_gaming.py) [[video]](https://www.youtube.com/watch?v=eoUOkV5vVpU&feature=youtu.be)
 <p align="center">
 <img src="doc/images/ex_multi_backprojection_hand_tracking_gaming.gif" width="550">
 </p>
 
 - Classify object using their colour fingerprint (histogram intersection) [[blog]](https://mpatacchiola.github.io/blog/2016/11/12/the-simplest-classifier-histogram-intersection.html) [[code]](./examples/ex_color_classification_image.py)
 <p align="center">
-<img src="doc/images/ex_color_classification_images.png" width="600">
+<img src="doc/images/ex_color_classification_images.png" width="750">
 </p>
 
 Acknowledgments
