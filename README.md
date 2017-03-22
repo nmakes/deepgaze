@@ -1,6 +1,8 @@
 Updates
 ----------
 
+**Update 22/03/2017** Fixed a bug in mask_analysis.py and almost completed a more robust version of the CNN head pose estimator.
+
 **Update 21/11/2016**
 New package [color_classification.py](./deepgaze/color_classification.py). The package contains an implementation of the histogram intersection algorithm for colour classification [[example]](./examples/ex_color_classification_images/ex_color_classification_image.py). Read more on [my blog post](https://mpatacchiola.github.io/blog/2016/11/12/the-simplest-classifier-histogram-intersection.html).
 
