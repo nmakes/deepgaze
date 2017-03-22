@@ -8,7 +8,7 @@
 #CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
 #SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#In this example i used the backprojection algorithm with multimple templates
+#In this example I used the backprojection algorithm with multimple templates
 # in order to track my hand in a webcam streaming. The center of the hand is
 #taken as reference point for controlling some keys on the keyboard and play
 #a videogame. To obtain the templates of your hands you can simply take some
@@ -45,9 +45,11 @@ template_list.append(cv2.imread('template_5.png')) #Load the image
 template_list.append(cv2.imread('template_6.png')) #Load the image
 
 #Open a webcam streaming
-video_capture=cv2.VideoCapture(1) #Open the webcam
+video_capture=cv2.VideoCapture(0) #Open the webcam
+#Reduce the size of the frame to 320x240
 video_capture.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 320)
 video_capture.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 240)
+#Get the webcam resolution
 cam_w = int(video_capture.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
 cam_h = int(video_capture.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
 #Declare an offset that is used to define the distance
@@ -61,7 +63,7 @@ my_mask_analyser = BinaryMaskAnalyser()
 my_back_detector = MultiBackProjectionColorDetector()
 my_back_detector.setTemplateList(template_list) #Set the template 
 
-print("Welcome! Press 'a' to start the tracking of your hand. Press 'q' to exit...")
+print("Welcome! Press 'a' to start the hand tracking. Press 'q' to exit...")
 
 while(True):
     # Capture frame-by-frame
