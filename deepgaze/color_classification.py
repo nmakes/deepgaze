@@ -58,20 +58,44 @@ class HistogramColorClassifier:
         self.hist_range = hist_range
         self.hist_type = hist_type
         self.model_list = list()
+        self.name_list = list()
 
-    def addModelHistogram(self, model_frame, index=-1):
-        """Add the histogram to internal container.
+    def addModelHistogram(self, model_frame, name=''):
+        """Add the histogram to internal container. If the name of the object
+           is already present then replace that histogram with a new one.
 
         @param model_frame the frame to add to the model, its histogram
             is obtained and saved in internal list.
-        @param index [not implemented]
+        @param name a string representing the name of the model.
+            If nothing is specified then the name will be the index of the element.
         """
         if(self.hist_type=='HSV'): model_frame = cv2.cvtColor(model_frame, cv2.COLOR_BGR2HSV)
         elif(self.hist_type=='GRAY'): model_frame = cv2.cvtColor(model_frame, cv2.COLOR_BGR2GRAY)
         elif(self.hist_type=='RGB'): model_frame = cv2.cvtColor(model_frame, cv2.COLOR_BGR2RGB)
         hist = cv2.calcHist([model_frame], self.channels, None, self.hist_size, self.hist_range)
         hist = cv2.normalize(hist).flatten()
-        self.model_list.append(hist)
+        if name == '': name = str(len(self.model_list))
+        if name not in self.name_list:
+            self.model_list.append(hist)
+            self.name_list.append(name)
+        else:
+            for i in range(len(self.name_list)):
+                if self.name_list[i] == name:
+                    self.model_list[i] = hist
+                    break
+
+    def removeModelHistogramByName(self, name):
+        """Remove the specific model using the name as index
+
+        @param: name the index of the element to remove
+        """
+        if name not in self.name_list:
+            raise ValueError('[DEEPGAZE][HistogramColorClassifier][ERROR] The name ' + str(name) + ' is not in the list.')
+        for i in range(len(self.name_list)):
+            if name_list[i] == name:
+                del self.name_list[i]
+                del self.model_list[i]
+                break
 
     def returnHistogramComparison(self, hist_1, hist_2, method='intersection'):
         """Return the comparison value of two histograms.
@@ -139,6 +163,32 @@ class HistogramColorClassifier:
             intersection: (default) the histogram intersection (Swain, Ballard)
         @return a numpy array containg the comparison value between each pair image-model
         """
-        comparison_array = self.returnComparisonArray(image, method=method)
+        comparison_array = self.returnHistogramComparisonArray(image, method=method)
         return np.argmax(comparison_array)
+
+    def returnBestMatchIndexName(self, image, method='intersection'):
+        """Return the name of the best match value between the image and the internal models.
+
+        @param image the image to compare
+        @param method the comparison method.
+            intersection: (default) the histogram intersection (Swain, Ballard)
+        @return a string representing the name of the best matching model
+        """
+        comparison_array = self.returnHistogramComparisonArray(image, method=method)
+        arg_max = np.argmax(comparison_array)
+        return self.name_list[arg_max]
+
+    def returnIndexNameList(self):
+        """Return a list containing all the names stored in the model.
+
+        @return: a list containing the name of the models.
+        """
+        return self.name_list
+
+    def returnSize(self):
+        """Return the number of elements stored.
+
+        @return: an integer representing the number of elements stored
+        """
+        return len(self.model_list)
 
