@@ -85,17 +85,18 @@ class HistogramColorClassifier:
                     break
 
     def removeModelHistogramByName(self, name):
-        """Remove the specific model using the name as index
+        """Remove the specific model using the name as index.
 
         @param: name the index of the element to remove
+        @return: True if the object has been deleted, otherwise False.
         """
         if name not in self.name_list:
-            raise ValueError('[DEEPGAZE][HistogramColorClassifier][ERROR] The name ' + str(name) + ' is not in the list.')
+            return False
         for i in range(len(self.name_list)):
-            if name_list[i] == name:
+            if self.name_list[i] == name:
                 del self.name_list[i]
                 del self.model_list[i]
-                break
+                return True
 
     def returnHistogramComparison(self, hist_1, hist_2, method='intersection'):
         """Return the comparison value of two histograms.
