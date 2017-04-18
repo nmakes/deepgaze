@@ -157,7 +157,7 @@ class HistogramColorClassifier:
         return comparison_distribution
 
     def returnBestMatchIndex(self, image, method='intersection'):
-        """Return the index of the best match value between the image and the internal models.
+        """Return the index of the best match between the image and the internal models.
 
         @param image the image to compare
         @param method the comparison method.
@@ -167,8 +167,8 @@ class HistogramColorClassifier:
         comparison_array = self.returnHistogramComparisonArray(image, method=method)
         return np.argmax(comparison_array)
 
-    def returnBestMatchIndexName(self, image, method='intersection'):
-        """Return the name of the best match value between the image and the internal models.
+    def returnBestMatchName(self, image, method='intersection'):
+        """Return the name of the best match between the image and the internal models.
 
         @param image the image to compare
         @param method the comparison method.
@@ -179,7 +179,7 @@ class HistogramColorClassifier:
         arg_max = np.argmax(comparison_array)
         return self.name_list[arg_max]
 
-    def returnIndexNameList(self):
+    def returnNameList(self):
         """Return a list containing all the names stored in the model.
 
         @return: a list containing the name of the models.
