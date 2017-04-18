@@ -214,7 +214,10 @@ class CnnHeadPoseEstimator:
              else: return yaw_vector
          #wrong shape          
          if(h != w or w<64 or h<64):
-             raise ValueError('[DEEPGAZE] CnnHeadPoseEstimator(return_yaw): the image given as input has wrong shape. Height and Width must be >= 64 pixel')
+             if h != w :
+		raise ValueError('[DEEPGAZE] CnnHeadPoseEstimator(return_yaw): the image given as input has wrong shape. Height must equal Width. Height=%d,Width=%d'%(h,w))
+             else:		
+             	raise ValueError('[DEEPGAZE] CnnHeadPoseEstimator(return_yaw): the image given as input has wrong shape. Height and Width must be >= 64 pixel')
          #wrong number of channels
          if(d!=3):
              raise ValueError('[DEEPGAZE] CnnHeadPoseEstimator(return_yaw): the image given as input does not have 3 channels, this function accepts only colour images.')
