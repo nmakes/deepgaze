@@ -88,13 +88,14 @@ Download the repository from [[here]](https://github.com/mpatacchiola/deepgaze/a
 git clone https://github.com/mpatacchiola/deepgaze.git
 ```
 
-To install the package you have to run the setup.py script (it may require root privileges):
+To install the package you have to enter in the deepgaze folder and run the setup.py script (it may require root privileges):
 
 ```shell
+cd deepgaze
 sudo python setup.py install
 ```
 
-If you want to track all the installed files you can record the installation process in a text file:
+If you want to track all the installed files you can record the installation process in a text file using the `--record` flag:
 
 ```shell
 sudo python setup.py install --record record.txt
