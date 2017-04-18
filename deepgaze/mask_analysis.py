@@ -42,9 +42,10 @@ class BinaryMaskAnalyser:
  
         This method could be useful to find the center of a face when a skin detector filter is used.
         @param mask the binary image to use in the function
-        @return get the x and y center coords of the contour whit the largest area 
+        @return get the x and y center coords of the contour whit the largest area.
+            In case of error it returns a tuple (None, None)
         """
-        if(mask is None): return None
+        if(mask is None): return (None, None)
         mask = np.copy(mask)
         if(len(mask.shape) == 3):
             mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
@@ -56,12 +57,13 @@ class BinaryMaskAnalyser:
                 #print("Area: " + str(cv2.contourArea(cnt)))
                 area_array[counter] = cv2.contourArea(cnt)
                 counter += 1
-        if(area_array.size==0): return None #the array is empty
+        if(area_array.size==0): return (None, None) #the array is empty
         max_area_index = np.argmax(area_array) #return the index of the max_area element
         #cv2.drawContours(image, [contours[max_area_index]], 0, (0,255,0), 3)
         #Get the centre of the max_area element
         cnt = contours[max_area_index]
         M = cv2.moments(cnt) #calculate the moments
+        if(M['m00'] == 0): return (None, None)
         cx = int(M['m10']/M['m00']) #get the center from the moments
         cy = int(M['m01']/M['m00'])
         return (cx, cy) #return the center coords
@@ -154,8 +156,9 @@ class BinaryMaskAnalyser:
         This method could be useful to find a face when a skin detector filter is used.
         @param mask the binary image to use in the function
         @return get the coords of the upper corner of the rectangle (x, y) and the rectangle size (widht, hight)
+            In case of error it returns a tuple (None, None, None, None) 
         """
-        if(mask is None): return None
+        if(mask is None): return (None, None, None, None)
         mask = np.copy(mask)
         if(len(mask.shape) == 3):
             mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
@@ -165,7 +168,7 @@ class BinaryMaskAnalyser:
         for cnt in contours:   
                 area_array[counter] = cv2.contourArea(cnt)
                 counter += 1
-        if(area_array.size==0): return None #the array is empty
+        if(area_array.size==0): return (None, None, None, None) #the array is empty
         max_area_index = np.argmax(area_array) #return the index of the max_area element
         cnt = contours[max_area_index]
         (x, y, w, h) = cv2.boundingRect(cnt)
@@ -188,7 +191,7 @@ class BinaryMaskAnalyser:
         @param mask the binary image to use in the function
         @return get the center (x, y) and the radius of the circle
         """
-        if(mask is None): return None
+        if(mask is None): return (None, None, None)
         mask = np.copy(mask)
         if(len(mask.shape) == 3):
             mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
@@ -198,7 +201,7 @@ class BinaryMaskAnalyser:
         for cnt in contours:   
                 area_array[counter] = cv2.contourArea(cnt)
                 counter += 1
-        if(area_array.size==0): return None #the array is empty
+        if(area_array.size==0): return (None, None, None) #the array is empty
         max_area_index = np.argmax(area_array) #return the index of the max_area element
         cnt = contours[max_area_index]
         (x,y),radius = cv2.minEnclosingCircle(cnt)
