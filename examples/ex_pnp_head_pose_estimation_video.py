@@ -168,6 +168,7 @@ def main():
 
         # Capture frame-by-frame
         ret, frame = video_capture.read()
+        if frame is None: return
         gray = cv2.cvtColor(frame[roi_y1:roi_y2, roi_x1:roi_x2], cv2.COLOR_BGR2GRAY)
 
         #Looking for faces with cascade
