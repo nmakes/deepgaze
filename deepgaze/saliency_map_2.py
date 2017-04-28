@@ -10,6 +10,7 @@
 
 import numpy as np
 import cv2
+import threading
 from timeit import default_timer as timer
 
 class FasaSaliencyMapping:
@@ -70,94 +71,86 @@ class FasaSaliencyMapping:
         # fall in the range channel_1=[150-200], channel_2=[0-50], channel_3=[100-150]
         # data = np.vstack((image[:, :, 0].flat, image[:, :, 1].flat, image[:, :, 2].flat)).astype(np.uint8).T
 
-        # 3- This line creates a 3D cube containing the coordinates of the centroids.
-        # Using these indeces it is possible to find the closest centroid to an image pixel.
         self.L_range = np.linspace(minL, maxL, num=tot_bins, endpoint=True)
         self.A_range = np.linspace(minA, maxA, num=tot_bins, endpoint=True)
         self.B_range = np.linspace(minB, maxB, num=tot_bins, endpoint=True)
         self.L_id_matrix = np.digitize(image[:, :, 0], self.L_range, right=True)
         self.A_id_matrix = np.digitize(image[:, :, 1], self.A_range, right=True)
         self.B_id_matrix = np.digitize(image[:, :, 2], self.B_range, right=True)
-
-        self.L_centroid, self.A_centroid, self.B_centroid = np.meshgrid(self.L_range, self.A_range, self.B_range)
-
         # Here I compute the histogram manually, this allow saving time because during the image
         # inspection it is possible to allocate other useful information
         self.histogram = np.zeros((tot_bins, tot_bins, tot_bins))
         # it maps the 3D index of hist in a flat 1D array index
         self.map_3d_1d = np.zeros((tot_bins, tot_bins, tot_bins), dtype=np.int32)
         # this matrix contains for each bin: mx, my, mx^2, my^2
-        self.centvar_matrix = np.zeros((tot_bins, tot_bins, tot_bins, 4))
-        # This block takes 0.4 seconds
+        self.centx_matrix  = np.zeros((tot_bins, tot_bins, tot_bins))  # mx
+        self.centy_matrix  = np.zeros((tot_bins, tot_bins, tot_bins))  # my
+        self.centx2_matrix = np.zeros((tot_bins, tot_bins, tot_bins))  # mx^2
+        self.centy2_matrix = np.zeros((tot_bins, tot_bins, tot_bins))  # my^2
+
         for y in xrange(0, self.image_rows):
             for x in xrange(0, self.image_cols):
                 L_id = self.L_id_matrix[y,x]
                 A_id = self.A_id_matrix[y,x]
                 B_id = self.B_id_matrix[y,x]
-                #self.centvar_matrix[L_id, A_id, B_id, :] += [x, y, x*x, y*y]
-                #self.centvar_matrix.itemset((L_id, A_id, B_id, 0), self.centvar_matrix[L_id, A_id, B_id, 0]+x)
-                #self.centvar_matrix.itemset((L_id, A_id, B_id, 1), self.centvar_matrix[L_id, A_id, B_id, 1]+y)
-                self.centvar_matrix[L_id, A_id, B_id, 0] += x
-                self.centvar_matrix[L_id, A_id, B_id, 1] += y
-                self.centvar_matrix[L_id, A_id, B_id, 2] += x * x  # np.power(x, 2)
-                self.centvar_matrix[L_id, A_id, B_id, 3] += y * y  # np.power(y, 2)
+                self.centx_matrix[L_id, A_id, B_id] += x + 1e-10
+                self.centy_matrix[L_id, A_id, B_id] += y + 1e-10
+                self.centx2_matrix[L_id, A_id, B_id] += x * x + 1e-10  # np.power(x, 2)
+                self.centy2_matrix[L_id, A_id, B_id] += y * y + 1e-10  # np.power(y, 2)
                 self.histogram[L_id, A_id, B_id] += 1
         return image
 
     # 2- Like in the cpp code. Returns: map, colorDistance [matrix], exponentialColorDistance [matrix]
     # the dimensions of colorDistance and exponentialColorDistance is shape (tot_bins, tot_bins)
-    def _precompute_paramters(self, sigmac=16):
+    def _precompute_parameters(self, sigmac=16):
+        # This line creates a 3D cube containing the coordinates of the centroids.
+        # Using these indices it is possible to find the closest centroid to an image pixel.
+        L_centroid, A_centroid, B_centroid = np.meshgrid(self.L_range, self.A_range, self.B_range)
         # It gets the indeces of the values with non-zero bin in the histogram 3D matrix
         # this save iteration time because skip bins with empty values
         self.index_matrix = np.transpose(np.nonzero(self.histogram))
         self.number_of_colors = np.amax(self.index_matrix.shape)
         self.color_distance_matrix = np.zeros((self.number_of_colors, self.number_of_colors))
-        self.exponential_color_distance_matrix = np.zeros((self.number_of_colors, self.number_of_colors))
+        self.exponential_color_distance_matrix = np.identity(self.number_of_colors)
         # Iterates on the indeces
         for i in xrange(0, self.number_of_colors):
-            self.color_distance_matrix[i, i] = 0.0
-            self.exponential_color_distance_matrix[i, i] = 1.0
+            #self.color_distance_matrix[i, i] = 0.0
+            #self.exponential_color_distance_matrix[i, i] = 1.0
             i_index = self.index_matrix[i, :]
-            L_i = self.L_centroid[i_index[0], i_index[1], i_index[2]]
-            A_i = self.A_centroid[i_index[0], i_index[1], i_index[2]]
-            B_i = self.B_centroid[i_index[0], i_index[1], i_index[2]]
+            L_i = L_centroid[i_index[0], i_index[1], i_index[2]]
+            A_i = A_centroid[i_index[0], i_index[1], i_index[2]]
+            B_i = B_centroid[i_index[0], i_index[1], i_index[2]]
+            i_vector = np.array([L_i, A_i, B_i])
             self.map_3d_1d[i_index[0], i_index[1], i_index[2]] = i  # the map is assigned here for performance purposes
             for k in xrange(i + 1, self.number_of_colors):
                 k_index = self.index_matrix[k, :]
-                L_k = self.L_centroid[k_index[0], k_index[1], k_index[2]]
-                A_k = self.A_centroid[k_index[0], k_index[1], k_index[2]]
-                B_k = self.B_centroid[k_index[0], k_index[1], k_index[2]]
-                color_difference = np.power(L_i - L_k, 2) + np.power(A_i - A_k, 2) + np.power(B_i - B_k, 2)
+                L_k = L_centroid[k_index[0], k_index[1], k_index[2]]
+                A_k = A_centroid[k_index[0], k_index[1], k_index[2]]
+                B_k = B_centroid[k_index[0], k_index[1], k_index[2]]
+                k_vector = np.array([L_k, A_k, B_k])
+                color_difference = np.sum(np.power(i_vector-k_vector, 2))
+                # color_difference = np.power(L_i - L_k, 2) + np.power(A_i - A_k, 2) + np.power(B_i - B_k, 2)
                 self.color_distance_matrix[i, k] = np.sqrt(color_difference)
-                self.color_distance_matrix[k, i] = np.sqrt(color_difference)
+                self.color_distance_matrix[k, i] = self.color_distance_matrix[i, k]
                 self.exponential_color_distance_matrix[i, k] = np.exp(- color_difference / (2 * sigmac * sigmac))
-                self.exponential_color_distance_matrix[k, i] = np.exp(- color_difference / (2 * sigmac * sigmac))
+                self.exponential_color_distance_matrix[k, i] = self.exponential_color_distance_matrix[i, k]
         return self.number_of_colors
 
     def _bilateral_filtering(self):
-        self.contrast = np.zeros(self.number_of_colors)
-        self.mx = np.zeros(self.number_of_colors)
-        self.my = np.zeros(self.number_of_colors)
-        mx2 = np.zeros(self.number_of_colors)
-        my2 = np.zeros(self.number_of_colors)
-        normalization_array = np.zeros(self.number_of_colors)
-        for i in xrange(0, self.number_of_colors):
-            for k in xrange(0, self.number_of_colors):
-                k_index = self.index_matrix[k, :]
-                # Here the main arrays are calculated
-                self.contrast[i] += self.color_distance_matrix[i, k] * self.histogram[
-                    k_index[0], k_index[1], k_index[2]]
-                self.mx[i] += self.exponential_color_distance_matrix[i, k] * self.centvar_matrix[
-                    k_index[0], k_index[1], k_index[2], 0]
-                self.my[i] += self.exponential_color_distance_matrix[i, k] * self.centvar_matrix[
-                    k_index[0], k_index[1], k_index[2], 1]
-                mx2[i] += self.exponential_color_distance_matrix[i, k] * self.centvar_matrix[
-                    k_index[0], k_index[1], k_index[2], 2]
-                my2[i] += self.exponential_color_distance_matrix[i, k] * self.centvar_matrix[
-                    k_index[0], k_index[1], k_index[2], 3]
-                normalization_array[i] += self.exponential_color_distance_matrix[i, k] * self.histogram[
-                    k_index[0], k_index[1], k_index[2]]
-
+        """ Applying the bilateral filtering to the matrices.
+        
+        Since the trick 'matrix[ matrix > x]' is used it would be possible to set a threshold
+        which is an energy value, considering only the histograms which have enough colours.
+        @return: mx, my, Vx, Vy
+        """
+        # Obtaining the values through vectorized operations (very efficient)
+        self.contrast = np.dot(self.color_distance_matrix, self.histogram[self.histogram > 0])
+        normalization_array = np.dot(self.exponential_color_distance_matrix, self.histogram[self.histogram > 0])
+        self.mx = np.dot(self.exponential_color_distance_matrix, self.centx_matrix[self.centx_matrix > 0])
+        self.my = np.dot(self.exponential_color_distance_matrix, self.centy_matrix[self.centy_matrix > 0])
+        mx2 = np.dot(self.exponential_color_distance_matrix, self.centx2_matrix[self.centx2_matrix > 0])
+        my2 = np.dot(self.exponential_color_distance_matrix, self.centy2_matrix[self.centy2_matrix > 0])
+        # Normalizing the vectors
         self.mx = np.divide(self.mx, normalization_array)
         self.my = np.divide(self.my, normalization_array)
         mx2 = np.divide(mx2, normalization_array)
@@ -182,7 +175,6 @@ class FasaSaliencyMapping:
         self.shape_probability = np.exp(- result / 2)
 
     def _compute_saliency_map(self):
-        self.number_of_colors = np.amax(self.contrast.shape)
         self.saliency = np.multiply(self.contrast, self.shape_probability)
         for i in xrange(0, self.number_of_colors):
             a1 = 0
@@ -247,8 +239,9 @@ class FasaSaliencyMapping:
         end = timer()
         print("--- %s calculate_histogram seconds ---" % (end - start))
         start = timer()
-        self._precompute_paramters()
+        number_of_colors = self._precompute_parameters()
         end = timer()
+        print("--- number of colors: " + str(number_of_colors) + " ---")
         print("--- %s precompute_paramters seconds ---" % (end - start))
         start = timer()
         self._bilateral_filtering()
@@ -347,7 +340,7 @@ def main_webcam():
 
         # Capture frame-by-frame
         ret, frame = video_capture.read()
-        image_salient = my_map.returnMask(frame, tot_bins=6, format='BGR2LAB')
+        image_salient = my_map.returnMask(frame, tot_bins=8, format='BGR2LAB')
 
         cv2.imshow('Video', image_salient)
         if cv2.waitKey(1) & 0xFF == ord('q'):
