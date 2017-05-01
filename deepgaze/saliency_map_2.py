@@ -10,8 +10,8 @@
 
 import numpy as np
 import cv2
-import threading
 from timeit import default_timer as timer
+
 
 class FasaSaliencyMapping:
     """Implementation of the FASA (Fast, Accurate, and Size-Aware Salient Object Detection) algorithm.
@@ -33,22 +33,21 @@ class FasaSaliencyMapping:
         """Init the classifier.
 
         """
-        # Assigning some gloabl variables and creating here the image to fill later (for speed purposes)
+        # Assigning some global variables and creating here the image to fill later (for speed purposes)
         self.image_rows = image_h
         self.image_cols = image_w
         self.salient_image = np.zeros((image_h, image_w), dtype=np.uint8)
         # mu: mean vector
         self.mean_vector = np.array([0.5555, 0.6449, 0.0002, 0.0063])
         # covariance matrix
-        self.covariance_matrix = np.array([[0.0231, -0.0010, 0.0001, -0.0002],
-                                           [-0.0010, 0.0246, -0.0000, 0.0000],
-                                           [0.0001, -0.0000, 0.0115, 0.0003],
-                                           [-0.0002, 0.0000, 0.0003, 0.0080]])
+        # self.covariance_matrix = np.array([[0.0231, -0.0010, 0.0001, -0.0002],
+        #                                    [-0.0010, 0.0246, -0.0000, 0.0000],
+        #                                    [0.0001, -0.0000, 0.0115, 0.0003],
+        #                                    [-0.0002, 0.0000, 0.0003, 0.0080]])
         # determinant of covariance matrix
         # self.determinant_covariance = np.linalg.det(self.covariance_matrix)
-        self.determinant_covariance = 5.21232874e-08
-
-        # calculate the inverse of the covariance matrix
+        # self.determinant_covariance = 5.21232874e-08
+        # Inverse of the covariance matrix
         self.covariance_matrix_inverse = np.array([[43.3777, 1.7633, -0.4059, 1.0997],
                                                    [1.7633, 40.7221, -0.0165, 0.0447],
                                                    [-0.4059, -0.0165, 87.0455, -3.2744],
@@ -58,7 +57,7 @@ class FasaSaliencyMapping:
         # 1- Conversion from BGR to LAB color space
         # Here a color space conversion is done. Moreover the min/max value for each channel is found.
         # This is helpful because the 3D histogram will be defined in this sub-space.
-        #image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        # image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
         minL, maxL, _, _ = cv2.minMaxLoc(image[:, :, 0])
         minA, maxA, _, _ = cv2.minMaxLoc(image[:, :, 1])
         minB, maxB, _, _ = cv2.minMaxLoc(image[:, :, 2])
@@ -70,13 +69,15 @@ class FasaSaliencyMapping:
         # So if you access the histogram with the indeces: histogram[3,0,2] it is possible to see how many pixels
         # fall in the range channel_1=[150-200], channel_2=[0-50], channel_3=[100-150]
         # data = np.vstack((image[:, :, 0].flat, image[:, :, 1].flat, image[:, :, 2].flat)).astype(np.uint8).T
-
         self.L_range = np.linspace(minL, maxL, num=tot_bins, endpoint=True)
         self.A_range = np.linspace(minA, maxA, num=tot_bins, endpoint=True)
         self.B_range = np.linspace(minB, maxB, num=tot_bins, endpoint=True)
-        self.L_id_matrix = np.digitize(image[:, :, 0], self.L_range, right=True)
-        self.A_id_matrix = np.digitize(image[:, :, 1], self.A_range, right=True)
-        self.B_id_matrix = np.digitize(image[:, :, 2], self.B_range, right=True)
+
+        # Here the image quantized using the discrete bins is created.
+        self.image_quantized = np.dstack((np.digitize(image[:, :, 0], self.L_range, right=True),
+                                          np.digitize(image[:, :, 1], self.A_range, right=True),
+                                          np.digitize(image[:, :, 2], self.B_range, right=True)))
+
         # Here I compute the histogram manually, this allow saving time because during the image
         # inspection it is possible to allocate other useful information
         self.histogram = np.zeros((tot_bins, tot_bins, tot_bins))
@@ -88,11 +89,16 @@ class FasaSaliencyMapping:
         self.centx2_matrix = np.zeros((tot_bins, tot_bins, tot_bins))  # mx^2
         self.centy2_matrix = np.zeros((tot_bins, tot_bins, tot_bins))  # my^2
 
+        #self.histogram = cv2.calcHist([image], channels=[0, 1, 2], mask=None, histSize=[tot_bins-1, tot_bins-1, tot_bins-1], ranges=[minL, maxL, minA, maxA, minB, maxB])
+        #data = np.vstack((image[:, :, 0].flat, image[:, :, 1].flat, image[:, :, 2].flat)).T
+        #self.histogram, edges = np.histogramdd(data, bins=tot_bins-1, range=((minL, maxL), (minA, maxA), (minB, maxB)))
+
         for y in xrange(0, self.image_rows):
             for x in xrange(0, self.image_cols):
-                L_id = self.L_id_matrix[y,x]
-                A_id = self.A_id_matrix[y,x]
-                B_id = self.B_id_matrix[y,x]
+                index = self.image_quantized[y,x]
+                L_id = index[0]
+                A_id = index[1]
+                B_id = index[2]
                 self.centx_matrix[L_id, A_id, B_id] += x + 1e-10
                 self.centy_matrix[L_id, A_id, B_id] += y + 1e-10
                 self.centx2_matrix[L_id, A_id, B_id] += x * x + 1e-10  # np.power(x, 2)
@@ -100,45 +106,34 @@ class FasaSaliencyMapping:
                 self.histogram[L_id, A_id, B_id] += 1
         return image
 
-    # 2- Like in the cpp code. Returns: map, colorDistance [matrix], exponentialColorDistance [matrix]
-    # the dimensions of colorDistance and exponentialColorDistance is shape (tot_bins, tot_bins)
     def _precompute_parameters(self, sigmac=16):
-        # This line creates a 3D cube containing the coordinates of the centroids.
-        # Using these indices it is possible to find the closest centroid to an image pixel.
+        """ Semi-Vectorized version of the precompute parameters function.
+        This function runs at 0.003 seconds on a squared 400x400 pixel image.
+        It returns the number of colors and estimates the color_distance matrix
+        
+        @param sigmac: the scalar used in the exponential (default=16) 
+        @return: the number of unique colors
+        """
         L_centroid, A_centroid, B_centroid = np.meshgrid(self.L_range, self.A_range, self.B_range)
-        # It gets the indeces of the values with non-zero bin in the histogram 3D matrix
-        # this save iteration time because skip bins with empty values
         self.index_matrix = np.transpose(np.nonzero(self.histogram))
         self.number_of_colors = np.amax(self.index_matrix.shape)
-        self.color_distance_matrix = np.zeros((self.number_of_colors, self.number_of_colors))
-        self.exponential_color_distance_matrix = np.identity(self.number_of_colors)
-        # Iterates on the indeces
+        self.unique_pixels = np.zeros((self.number_of_colors, 3))
         for i in xrange(0, self.number_of_colors):
-            #self.color_distance_matrix[i, i] = 0.0
-            #self.exponential_color_distance_matrix[i, i] = 1.0
             i_index = self.index_matrix[i, :]
             L_i = L_centroid[i_index[0], i_index[1], i_index[2]]
             A_i = A_centroid[i_index[0], i_index[1], i_index[2]]
             B_i = B_centroid[i_index[0], i_index[1], i_index[2]]
-            i_vector = np.array([L_i, A_i, B_i])
+            self.unique_pixels[i] = np.array([L_i, A_i, B_i])
             self.map_3d_1d[i_index[0], i_index[1], i_index[2]] = i  # the map is assigned here for performance purposes
-            for k in xrange(i + 1, self.number_of_colors):
-                k_index = self.index_matrix[k, :]
-                L_k = L_centroid[k_index[0], k_index[1], k_index[2]]
-                A_k = A_centroid[k_index[0], k_index[1], k_index[2]]
-                B_k = B_centroid[k_index[0], k_index[1], k_index[2]]
-                k_vector = np.array([L_k, A_k, B_k])
-                color_difference = np.sum(np.power(i_vector-k_vector, 2))
-                # color_difference = np.power(L_i - L_k, 2) + np.power(A_i - A_k, 2) + np.power(B_i - B_k, 2)
-                self.color_distance_matrix[i, k] = np.sqrt(color_difference)
-                self.color_distance_matrix[k, i] = self.color_distance_matrix[i, k]
-                self.exponential_color_distance_matrix[i, k] = np.exp(- color_difference / (2 * sigmac * sigmac))
-                self.exponential_color_distance_matrix[k, i] = self.exponential_color_distance_matrix[i, k]
+        color_difference_matrix = np.sum(np.power(self.unique_pixels[:, np.newaxis] - self.unique_pixels, 2), axis=2)
+        self.color_distance_matrix = np.sqrt(color_difference_matrix)
+        self.exponential_color_distance_matrix = np.exp(- np.divide(color_difference_matrix, (2 * sigmac * sigmac)))
         return self.number_of_colors
 
     def _bilateral_filtering(self):
         """ Applying the bilateral filtering to the matrices.
         
+        This function runs at 0.0006 seconds on a squared 400x400 pixel image.
         Since the trick 'matrix[ matrix > x]' is used it would be possible to set a threshold
         which is an energy value, considering only the histograms which have enough colours.
         @return: mx, my, Vx, Vy
@@ -162,7 +157,8 @@ class FasaSaliencyMapping:
     def _calculate_probability(self):
         """ Vectorized version of the probability estimation.
         
-        :return: a vector shape_probability of shape (number_of_colors)
+        This function runs at 0.0001 seconds on a squared 400x400 pixel image.
+        @return: a vector shape_probability of shape (number_of_colors)
         """
         g = np.array([np.sqrt(12 * self.Vx) / self.image_cols,
                       np.sqrt(12 * self.Vy) / self.image_rows,
@@ -173,19 +169,20 @@ class FasaSaliencyMapping:
         A = self.covariance_matrix_inverse
         result = (np.dot(X, A) * Y).sum(1)  # This line does the trick
         self.shape_probability = np.exp(- result / 2)
+        return self.shape_probability
 
     def _compute_saliency_map(self):
+        """ Fast vectorized version of the saliency map estimation.
+        
+        This function runs at 7.7e-05 seconds on a squared 400x400 pixel image.
+        @return: the saliency vector 
+        """
+        # Vectorized operations for saliency vector estimation
         self.saliency = np.multiply(self.contrast, self.shape_probability)
-        for i in xrange(0, self.number_of_colors):
-            a1 = 0
-            a2 = 0
-            for k in xrange(0, self.number_of_colors):
-                if self.exponential_color_distance_matrix[i,k] > 0:
-                    a1 += self.saliency[k] * self.exponential_color_distance_matrix[i,k]
-                    a2 += self.exponential_color_distance_matrix[i,k]
-            self.saliency[i] = a1/a2
-
-        # the saliency vector is renormalised in range [0-255]
+        a1 = np.dot(self.exponential_color_distance_matrix, self.saliency)
+        a2 = np.sum(self.exponential_color_distance_matrix, axis=1)
+        self.saliency = np.divide(a1, a2)
+        # The saliency vector is renormalised in range [0-255]
         minVal, maxVal, _, _ = cv2.minMaxLoc(self.saliency)
         self.saliency = self.saliency - minVal
         self.saliency = 255 * self.saliency / (maxVal - minVal) + 1e-3
@@ -233,7 +230,7 @@ class FasaSaliencyMapping:
         elif format == 'RGB' or format == 'BGR' or format == 'LAB':
             pass
         else:
-            raise ValueError('[DEEPGAZE][SALIENCY MAP][ERROR] the input format of the image is not supported.')
+            raise ValueError('[DEEPGAZE][SALIENCY-MAP][ERROR] the input format of the image is not supported.')
         start = timer()
         self._calculate_histogram(image, tot_bins=tot_bins)
         end = timer()
@@ -255,32 +252,22 @@ class FasaSaliencyMapping:
         self._compute_saliency_map()
         end = timer()
         print("--- %s compute_saliency_map seconds ---" % (end - start))
-        '''
-        for y in xrange(0, self.image_rows):
-            for x in xrange(0, self.image_cols):
-                L_id = int(np.digitize(image[y, x, 0], self.L_range, right=True))
-                A_id = int(np.digitize(image[y, x, 1], self.A_range, right=True))
-                B_id = int(np.digitize(image[y, x, 2], self.B_range, right=True))
-                index = np.argmax(np.all(self.index_matrix == [L_id, A_id, B_id], axis=1))
-                self.salient_image[y,x] = self.saliency[index]
-        '''
-        # Obtain the index of the image single pixel
-        #self.L_id_matrix = np.digitize(image[:, :, 0], self.L_range, right=True)
-        #self.A_id_matrix = np.digitize(image[:, :, 1], self.A_range, right=True)
-        #self.B_id_matrix = np.digitize(image[:, :, 2], self.B_range, right=True)
-        #index_list = self.index_matrix.tolist()
         start = timer()
         it = np.nditer(self.salient_image, flags=['multi_index'], op_flags=['writeonly'])
         while not it.finished:
+            # This part takes 0.1 seconds
             y = it.multi_index[0]
             x = it.multi_index[1]
-            L_id = self.L_id_matrix[y, x]
-            A_id = self.A_id_matrix[y, x]
-            B_id = self.B_id_matrix[y, x]
-            index = self.map_3d_1d[L_id, A_id, B_id]
+            #L_id = self.L_id_matrix[y, x]
+            #A_id = self.A_id_matrix[y, x]
+            #B_id = self.B_id_matrix[y, x]
+            index = self.image_quantized[y, x]
+            # These operations take 0.1 seconds
+            index = self.map_3d_1d[index[0], index[1], index[2]]
             it[0] = self.saliency[index]
             it.iternext()
         end = timer()
+        # ret, self.salient_image = cv2.threshold(self.salient_image, 150, 255, cv2.THRESH_BINARY)
         print("--- %s returnMask 'iteration part' seconds ---" % (end - start))
         return self.salient_image
 
@@ -305,7 +292,6 @@ def main():
     #cv2.imshow("Contrast", image_contrast)
     cv2.imshow("Saliency Map", image_salient)
     #cv2.imshow("Probability", image_probability)
-
 
     while True:
         if cv2.waitKey(33) == ord('q'):
@@ -336,12 +322,14 @@ def main_webcam():
 
     my_map = FasaSaliencyMapping(cam_h, cam_w)
 
-    while(True):
-
+    while True:
+        start = timer()
         # Capture frame-by-frame
         ret, frame = video_capture.read()
         image_salient = my_map.returnMask(frame, tot_bins=8, format='BGR2LAB')
-
+        end = timer()
+        print("--- %s Tot seconds ---" % (end - start))
+        print("")
         cv2.imshow('Video', image_salient)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
