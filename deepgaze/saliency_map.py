@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 
-#The MIT License (MIT)
-#Copyright (c) 2017 Massimiliano Patacchiola
+# The MIT License (MIT)
+# Copyright (c) 2017 Massimiliano Patacchiola
 #
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
-#MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
-#CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
-#SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import numpy as np
 import cv2
+from timeit import default_timer as timer
+
 
 class FasaSaliencyMapping:
     """Implementation of the FASA (Fast, Accurate, and Size-Aware Salient Object Detection) algorithm.
@@ -27,288 +29,311 @@ class FasaSaliencyMapping:
     processing a high-definition video in real time. 
     """
 
-    def __init__(self):
+    def __init__(self, image_h, image_w):
         """Init the classifier.
 
         """
+        # Assigning some global variables and creating here the image to fill later (for speed purposes)
+        self.image_rows = image_h
+        self.image_cols = image_w
+        self.salient_image = np.zeros((image_h, image_w), dtype=np.uint8)
         # mu: mean vector
         self.mean_vector = np.array([0.5555, 0.6449, 0.0002, 0.0063])
         # covariance matrix
-        self.covariance_matrix = np.array([[ 0.0231, -0.0010,  0.0001, -0.0002],
-                                           [-0.0010,  0.0246, -0.0000,  0.0000],
-                                           [ 0.0001, -0.0000,  0.0115,  0.0003],
-                                           [-0.0002,  0.0000,  0.0003,  0.0080]])
+        # self.covariance_matrix = np.array([[0.0231, -0.0010, 0.0001, -0.0002],
+        #                                    [-0.0010, 0.0246, -0.0000, 0.0000],
+        #                                    [0.0001, -0.0000, 0.0115, 0.0003],
+        #                                    [-0.0002, 0.0000, 0.0003, 0.0080]])
         # determinant of covariance matrix
-        self.determinant_covariance = np.linalg.det(self.covariance_matrix)
-        # calculate the inverse of the covariance matrix
-        self.covariance_matrix_inverse = np.array([[43.3777,    1.7633,   -0.4059,    1.0997],
-                                                   [1.7633,   40.7221,   -0.0165,    0.0447],
-                                                   [-0.4059,   -0.0165,   87.0455,   -3.2744],
-                                                   [1.0997,    0.0447,   -3.2744,  125.1503]])
+        # self.determinant_covariance = np.linalg.det(self.covariance_matrix)
+        # self.determinant_covariance = 5.21232874e-08
+        # Inverse of the covariance matrix
+        self.covariance_matrix_inverse = np.array([[43.3777, 1.7633, -0.4059, 1.0997],
+                                                   [1.7633, 40.7221, -0.0165, 0.0447],
+                                                   [-0.4059, -0.0165, 87.0455, -3.2744],
+                                                   [1.0997, 0.0447, -3.2744, 125.1503]])
 
-    def _return_quantized_image(self, image, number_of_clusters=8):
-        """Returns a quantized version of the image using k-mean clustering.
+    def _calculate_histogram(self, image, tot_bins=8):
+        # 1- Conversion from BGR to LAB color space
+        # Here a color space conversion is done. Moreover the min/max value for each channel is found.
+        # This is helpful because the 3D histogram will be defined in this sub-space.
+        # image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        minL, maxL, _, _ = cv2.minMaxLoc(image[:, :, 0])
+        minA, maxA, _, _ = cv2.minMaxLoc(image[:, :, 1])
+        minB, maxB, _, _ = cv2.minMaxLoc(image[:, :, 2])
+
+        # 2- Histograms in a 3D manifold of shape (tot_bin, tot_bin, tot_bin).
+        # The cv2.calcHist for a 3-channels image generates a cube of size (tot_bins, tot_bins, tot_bins) which is a
+        # discretization of the 3-D space defined by hist_range.
+        # E.G. if range is 0-255 and it is divided in 5 bins we get -> [0-50][50-100][100-150][150-200][200-250]
+        # So if you access the histogram with the indeces: histogram[3,0,2] it is possible to see how many pixels
+        # fall in the range channel_1=[150-200], channel_2=[0-50], channel_3=[100-150]
+        # data = np.vstack((image[:, :, 0].flat, image[:, :, 1].flat, image[:, :, 2].flat)).astype(np.uint8).T
+        self.L_range = np.linspace(minL, maxL, num=tot_bins, endpoint=True)
+        self.A_range = np.linspace(minA, maxA, num=tot_bins, endpoint=True)
+        self.B_range = np.linspace(minB, maxB, num=tot_bins, endpoint=True)
+
+        # Here the image quantized using the discrete bins is created.
+        self.image_quantized = np.dstack((np.digitize(image[:, :, 0], self.L_range, right=True),
+                                          np.digitize(image[:, :, 1], self.A_range, right=True),
+                                          np.digitize(image[:, :, 2], self.B_range, right=True)))
+
+        # Here I compute the histogram manually, this allow saving time because during the image
+        # inspection it is possible to allocate other useful information
+        self.histogram = np.zeros((tot_bins, tot_bins, tot_bins))
+        # it maps the 3D index of hist in a flat 1D array index
+        self.map_3d_1d = np.zeros((tot_bins, tot_bins, tot_bins), dtype=np.int32)
+        # this matrix contains for each bin: mx, my, mx^2, my^2
+        self.centx_matrix  = np.zeros((tot_bins, tot_bins, tot_bins))  # mx
+        self.centy_matrix  = np.zeros((tot_bins, tot_bins, tot_bins))  # my
+        self.centx2_matrix = np.zeros((tot_bins, tot_bins, tot_bins))  # mx^2
+        self.centy2_matrix = np.zeros((tot_bins, tot_bins, tot_bins))  # my^2
+
+        #self.histogram = cv2.calcHist([image], channels=[0, 1, 2], mask=None, histSize=[tot_bins-1, tot_bins-1, tot_bins-1], ranges=[minL, maxL, minA, maxA, minB, maxB])
+        #data = np.vstack((image[:, :, 0].flat, image[:, :, 1].flat, image[:, :, 2].flat)).T
+        #self.histogram, edges = np.histogramdd(data, bins=tot_bins-1, range=((minL, maxL), (minA, maxA), (minB, maxB)))
+
+        for y in xrange(0, self.image_rows):
+            for x in xrange(0, self.image_cols):
+                index = self.image_quantized[y,x]
+                L_id = index[0]
+                A_id = index[1]
+                B_id = index[2]
+                self.centx_matrix[L_id, A_id, B_id] += x + 1e-10
+                self.centy_matrix[L_id, A_id, B_id] += y + 1e-10
+                self.centx2_matrix[L_id, A_id, B_id] += x * x + 1e-10  # np.power(x, 2)
+                self.centy2_matrix[L_id, A_id, B_id] += y * y + 1e-10  # np.power(y, 2)
+                self.histogram[L_id, A_id, B_id] += 1
+        return image
+
+    def _precompute_parameters(self, sigmac=16):
+        """ Semi-Vectorized version of the precompute parameters function.
+        This function runs at 0.003 seconds on a squared 400x400 pixel image.
+        It returns the number of colors and estimates the color_distance matrix
         
-        @param image: the original image (BGR)
-        @param number_of_clusters: the number of cluster to use
-        @return: the quantized image
+        @param sigmac: the scalar used in the exponential (default=16) 
+        @return: the number of unique colors
         """
+        L_centroid, A_centroid, B_centroid = np.meshgrid(self.L_range, self.A_range, self.B_range)
+        self.index_matrix = np.transpose(np.nonzero(self.histogram))
+        self.number_of_colors = np.amax(self.index_matrix.shape)
+        self.unique_pixels = np.zeros((self.number_of_colors, 3))
+        for i in xrange(0, self.number_of_colors):
+            i_index = self.index_matrix[i, :]
+            L_i = L_centroid[i_index[0], i_index[1], i_index[2]]
+            A_i = A_centroid[i_index[0], i_index[1], i_index[2]]
+            B_i = B_centroid[i_index[0], i_index[1], i_index[2]]
+            self.unique_pixels[i] = np.array([L_i, A_i, B_i])
+            self.map_3d_1d[i_index[0], i_index[1], i_index[2]] = i  # the map is assigned here for performance purposes
+        color_difference_matrix = np.sum(np.power(self.unique_pixels[:, np.newaxis] - self.unique_pixels, 2), axis=2)
+        self.color_distance_matrix = np.sqrt(color_difference_matrix)
+        self.exponential_color_distance_matrix = np.exp(- np.divide(color_difference_matrix, (2 * sigmac * sigmac)))
+        return self.number_of_colors
 
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
-        #image = cv2.cvtColor(image, cv2.COLOR_LBGR2LAB)
-        maxL = np.amax(image[:, :, 0])
-        minL = np.amin(image[:, :, 0])
-        maxA = np.amax(image[:, :, 1])
-        minA = np.amin(image[:, :, 1])
-        maxB = np.amax(image[:, :, 2])
-        minB = np.amin(image[:, :, 2])
-        # Reshape the image and convert to float32
-        Z = image.reshape((-1, 3))
-        Z = np.float32(Z)
-        # Define criteria = ( type, max_iter = 5 , epsilon = 1.0 )
-        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 3, 1.0)
-        # Set flags (Just to avoid line break in the code)
-        flags = cv2.KMEANS_RANDOM_CENTERS
-        # cv2.kmeans(data, K, criteria, attempts, flags[, bestLabels[, centers]]) -> retval, bestLabels, centers
-        compactness, label, centers = cv2.kmeans(Z, number_of_clusters, criteria, 3, flags)
-        # Count how many element in each bin
-        bincount_array = np.bincount(label.flatten())
-        # Back to uint8
-        # center = np.uint8(center)
-        res = np.uint8(centers)[label.flatten()]
-        image_quantized = res.reshape((image.shape))
-        pixel_to_index = np.vstack(np.arange(number_of_clusters))
-        pixel_to_index = pixel_to_index[label.flatten()]
-        return image, image_quantized, centers, pixel_to_index[:,0].reshape((image.shape[0],image.shape[1])), bincount_array
-
-    def _return_centers_variances(self, cluster_centers_array, cluster_labels_array, bincount_array):
-        K = np.amax(cluster_centers_array.shape)
-        m_xk = np.zeros(K)
-        m_yk = np.zeros(K)
-        V_xk = np.zeros(K)
-        V_yk = np.zeros(K)
-        for k in range(K):
-            w_c = np.zeros(K)
-            y_i_list = list()
-            x_i_list = list()
-            Q_k = cluster_centers_array[k]
-            for j in range(K):
-                Q_j = cluster_centers_array[j]
-                w_c[j] = self._return_color_weights(Q_k, Q_j)
-                x_i_list.append(np.where(cluster_labels_array == j)[1])  # taking the column indeces
-                y_i_list.append(np.where(cluster_labels_array == j)[0])  # taking the rows indeces
-            # To be faster it estimates the denominator only once
-            denominator = np.sum(np.multiply(bincount_array, w_c))
-            # Estimate the center
-            m_xk[k] = np.sum(w_c * np.sum(x_i_list[k])) / denominator
-            m_yk[k] = np.sum(w_c * np.sum(y_i_list[k])) / denominator
-            # Estimate the variance
-            V_xk[k] = np.sum(w_c * np.sum((x_i_list[k] - m_xk[k])**2)) / denominator
-            V_yk[k] = np.sum(w_c * np.sum((y_i_list[k] - m_yk[k])**2)) / denominator
-        return m_xk, m_yk, V_xk, V_yk, w_c
-
-
-    def _return_centers_variances(self, cluster_centers_array, cluster_labels_array, bincount_array):
-        K = np.amax(cluster_centers_array.shape)
-        m_xk = np.zeros(K)
-        m_yk = np.zeros(K)
-        V_xk = np.zeros(K)
-        V_yk = np.zeros(K)
-        for k in range(K):
-            w_c = np.zeros(K)
-            y_i_list = list()
-            x_i_list = list()
-            Q_k = cluster_centers_array[k]
-            for j in range(K):
-                Q_j = cluster_centers_array[j]
-                w_c[j] = self._return_color_weights(Q_k, Q_j)
-                x_i_list.append(np.where(cluster_labels_array == j)[1])  # taking the column indeces
-                y_i_list.append(np.where(cluster_labels_array == j)[0])  # taking the rows indeces
-            # To be faster it estimates the denominator only once
-            denominator = np.sum(np.multiply(bincount_array, w_c))
-            # Estimate the center
-            m_xk[k] = np.sum(w_c * np.sum(x_i_list[k])) / denominator
-            m_yk[k] = np.sum(w_c * np.sum(y_i_list[k])) / denominator
-            # Estimate the variance
-            V_xk[k] = np.sum(w_c * np.sum((x_i_list[k] - m_xk[k])**2)) / denominator
-            V_yk[k] = np.sum(w_c * np.sum((y_i_list[k] - m_yk[k])**2)) / denominator
-        return m_xk, m_yk, V_xk, V_yk, w_c
-
-    def _return_color_weights(self, C_i, C_j, sigma=16):
-        """
+    def _bilateral_filtering(self):
+        """ Applying the bilateral filtering to the matrices.
         
-        @param C_i: 
-        @param C_j: 
-        @param omega: parameter to adjust the effect of the color difference. 
-        @return: 
+        This function runs at 0.0006 seconds on a squared 400x400 pixel image.
+        Since the trick 'matrix[ matrix > x]' is used it would be possible to set a threshold
+        which is an energy value, considering only the histograms which have enough colours.
+        @return: mx, my, Vx, Vy
         """
-        numerator = (C_i[0] - C_j[0])**2 + (C_i[1] - C_j[1])**2 + (C_i[2] - C_j[2])**2
-        numerator = np.sqrt(numerator)
-        # numerator = np.linalg.norm(C_i-C_j)**2  # squared euclidean distance
-        #denominator = 2*sigma*sigma  # normalisation
-        return np.exp(-numerator/(2*sigma*sigma))
+        # Obtaining the values through vectorized operations (very efficient)
+        self.contrast = np.dot(self.color_distance_matrix, self.histogram[self.histogram > 0])
+        normalization_array = np.dot(self.exponential_color_distance_matrix, self.histogram[self.histogram > 0])
+        self.mx = np.dot(self.exponential_color_distance_matrix, self.centx_matrix[self.centx_matrix > 0])
+        self.my = np.dot(self.exponential_color_distance_matrix, self.centy_matrix[self.centy_matrix > 0])
+        mx2 = np.dot(self.exponential_color_distance_matrix, self.centx2_matrix[self.centx2_matrix > 0])
+        my2 = np.dot(self.exponential_color_distance_matrix, self.centy2_matrix[self.centy2_matrix > 0])
+        # Normalizing the vectors
+        self.mx = np.divide(self.mx, normalization_array)
+        self.my = np.divide(self.my, normalization_array)
+        mx2 = np.divide(mx2, normalization_array)
+        my2 = np.divide(my2, normalization_array)
+        self.Vx = np.subtract(mx2, np.power(self.mx, 2))
+        self.Vy = np.subtract(my2, np.power(self.my, 2))
+        return self.mx, self.my, self.Vx, self.Vy
 
-    def _return_saliency_and_contrast(self, labels_array, tot_bins, n_w, n_h, m_x, m_y, V_x, V_y, cluster_centers_array, bincount_array):
-        N = n_w * n_h #image dimension
-        label_matrix = np.reshape(labels_array, (n_h, n_w))
-        #Variables for the saliency probability
-        image_salient = np.zeros((n_h, n_w))
-        g_list = list()
-        #Variable for the global contrast
-        image_contrast = np.zeros((n_h, n_w))
-        h_w = np.zeros((tot_bins,tot_bins))
-        for k in range(tot_bins):
-            #Calculate the g vectors for the saliency probability
-            g = np.array([np.sqrt(12 *V_x[k]) / n_w,
-                          np.sqrt(12 * V_y[k]) / n_h,
-                          (m_x[k]-(n_w/ 2))/n_w,
-                          (m_y[k]-(n_h/ 2))/n_h])
-            g_list.append(g)
-            for j in range(tot_bins):
-                #calculate the distances for the contrast
-                Q_k = cluster_centers_array[k]
-                Q_j = cluster_centers_array[j]
-                h_w[k,:] = bincount_array[j] * self._return_color_weights(Q_k, Q_j)
+    def _calculate_probability(self):
+        """ Vectorized version of the probability estimation.
+        
+        This function runs at 0.0001 seconds on a squared 400x400 pixel image.
+        @return: a vector shape_probability of shape (number_of_colors)
+        """
+        g = np.array([np.sqrt(12 * self.Vx) / self.image_cols,
+                      np.sqrt(12 * self.Vy) / self.image_rows,
+                      (self.mx - (self.image_cols / 2.0)) / float(self.image_cols),
+                      (self.my - (self.image_rows / 2.0)) / float(self.image_rows)])
+        X = (g.T - self.mean_vector)
+        Y = X
+        A = self.covariance_matrix_inverse
+        result = (np.dot(X, A) * Y).sum(1)  # This line does the trick
+        self.shape_probability = np.exp(- result / 2)
+        return self.shape_probability
 
-        #for each pixel finds the probability of saliency
-        for col in range(n_w):
-            for row in range(n_h):
-                bin_index = label_matrix[row,col]
-                g = g_list[bin_index]
-                image_salient[row,col] = (1 / ((2 * np.pi)**2 * np.sqrt(self.determinant_covariance))) * \
-                                         np.exp(-np.dot(np.dot((g-self.mean_vector), self.covariance_matrix_inverse), g-self.mean_vector)/2)
+    def _compute_saliency_map(self):
+        """ Fast vectorized version of the saliency map estimation.
+        
+        This function runs at 7.7e-05 seconds on a squared 400x400 pixel image.
+        @return: the saliency vector 
+        """
+        # Vectorized operations for saliency vector estimation
+        self.saliency = np.multiply(self.contrast, self.shape_probability)
+        a1 = np.dot(self.exponential_color_distance_matrix, self.saliency)
+        a2 = np.sum(self.exponential_color_distance_matrix, axis=1)
+        self.saliency = np.divide(a1, a2)
+        # The saliency vector is renormalised in range [0-255]
+        minVal, maxVal, _, _ = cv2.minMaxLoc(self.saliency)
+        self.saliency = self.saliency - minVal
+        self.saliency = 255 * self.saliency / (maxVal - minVal) + 1e-3
+        return self.saliency
 
-                # Find the contrast image
-                image_contrast[row, col] = np.sum(h_w[bin_index,:])
+    def return_contrast_image(self, image):
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        contrast = self.contrast
+        minVal, maxVal, _, _ = cv2.minMaxLoc(contrast)
+        contrast = contrast - minVal
+        contrast = 255 * contrast / (maxVal - minVal) + 1e-3
+        image_salient = np.zeros((self.image_rows, self.image_cols))
+        for y in xrange(0, self.image_rows):
+            for x in xrange(0, self.image_cols):
+                L_id = int(np.digitize(image[y, x, 0], self.L_range, right=True))
+                A_id = int(np.digitize(image[y, x, 1], self.A_range, right=True))
+                B_id = int(np.digitize(image[y, x, 2], self.B_range, right=True))
+                index = np.argmax(np.all(self.index_matrix == [L_id, A_id, B_id], axis=1))
+                image_salient[y,x] = contrast[index]
+        return np.uint8(image_salient)
 
-        return image_salient, image_contrast
+    def return_probability_image(self, image):
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        probability = self.shape_probability
+        minVal, maxVal, _, _ = cv2.minMaxLoc(probability)
+        probability = probability - minVal
+        probability = 255 * probability / (maxVal - minVal) + 1e-3
+        image_salient = np.zeros((self.image_rows, self.image_cols))
+        for y in xrange(0, self.image_rows):
+            for x in xrange(0, self.image_cols):
+                L_id = int(np.digitize(image[y, x, 0], self.L_range, right=True))
+                A_id = int(np.digitize(image[y, x, 1], self.A_range, right=True))
+                B_id = int(np.digitize(image[y, x, 2], self.B_range, right=True))
+                index = np.argmax(np.all(self.index_matrix == [L_id, A_id, B_id], axis=1))
+                image_salient[y,x] = probability[index]
+        return np.uint8(image_salient)
 
-    # Saliency probability vector
-    def _return_p_vector(self, n_w, n_h, m_x, m_y, V_x, V_y):
-        # Variables for the saliency probability
-        tot_bins = np.amax(m_x.shape)
-        p_vector = np.zeros(tot_bins)
-        for k in range(tot_bins):
-            # Calculate the g vectors for the saliency probability
-            g = np.array([np.sqrt(12 *V_x[k]) / n_w,
-                          np.sqrt(12 * V_y[k]) / n_h,
-                          (m_x[k]-(n_w/ 2))/n_w,
-                          (m_y[k]-(n_h/ 2))/n_h])
-            # Allocare the result in the p vector
-            p_vector[k] = (1 / ((2 * np.pi) ** 2 * np.sqrt(self.determinant_covariance))) * \
-                            np.exp(-np.dot(np.dot((g - self.mean_vector), self.covariance_matrix_inverse),
-                            g - self.mean_vector) / 2)
-        minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(p_vector)
-        p_vector = p_vector - minVal
-        p_vector = p_vector / (maxVal - minVal + 1e-3)
-        return p_vector
+    def returnMask(self, image, tot_bins=8, format='BGR2LAB'):
+        if format == 'BGR2LAB':
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        elif format == 'BGR2RGB':
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        elif format == 'RGB2LAB':
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
+        elif format == 'RGB' or format == 'BGR' or format == 'LAB':
+            pass
+        else:
+            raise ValueError('[DEEPGAZE][SALIENCY-MAP][ERROR] the input format of the image is not supported.')
+        start = timer()
+        self._calculate_histogram(image, tot_bins=tot_bins)
+        end = timer()
+        print("--- %s calculate_histogram seconds ---" % (end - start))
+        start = timer()
+        number_of_colors = self._precompute_parameters()
+        end = timer()
+        print("--- number of colors: " + str(number_of_colors) + " ---")
+        print("--- %s precompute_paramters seconds ---" % (end - start))
+        start = timer()
+        self._bilateral_filtering()
+        end = timer()
+        print("--- %s bilateral_filtering seconds ---" % (end - start))
+        start = timer()
+        self._calculate_probability()
+        end = timer()
+        print("--- %s calculate_probability seconds ---" % (end - start))
+        start = timer()
+        self._compute_saliency_map()
+        end = timer()
+        print("--- %s compute_saliency_map seconds ---" % (end - start))
+        start = timer()
+        it = np.nditer(self.salient_image, flags=['multi_index'], op_flags=['writeonly'])
+        while not it.finished:
+            # This part takes 0.1 seconds
+            y = it.multi_index[0]
+            x = it.multi_index[1]
+            #L_id = self.L_id_matrix[y, x]
+            #A_id = self.A_id_matrix[y, x]
+            #B_id = self.B_id_matrix[y, x]
+            index = self.image_quantized[y, x]
+            # These operations take 0.1 seconds
+            index = self.map_3d_1d[index[0], index[1], index[2]]
+            it[0] = self.saliency[index]
+            it.iternext()
+        end = timer()
+        # ret, self.salient_image = cv2.threshold(self.salient_image, 150, 255, cv2.THRESH_BINARY)
+        print("--- %s returnMask 'iteration part' seconds ---" % (end - start))
+        return self.salient_image
 
-    # Contrast vector
-    def _return_r_vector(self, w_matrix, bincount_array):
-        r_vector = np.sum(bincount_array * w_matrix, axis=1)
-        minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(r_vector)
-        r_vector = r_vector - minVal
-        r_vector = r_vector / (maxVal - minVal + 1e-3)
-        return r_vector
-
-    def _return_r_vector_mod(self, centers_array, bincount_array):
-        distance_matrix = self._return_distance_matrix(centers_array)
-        r_vector = np.sum(bincount_array * distance_matrix, axis=1)
-        minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(r_vector)
-        r_vector = r_vector - minVal
-        r_vector = r_vector / (maxVal - minVal + 1e-3)
-        return r_vector
-
-    # The final saliency vector
-    def _return_s_vector(self, w_matrix, p_vector, r_vector):
-        w_sum = np.sum(w_matrix, axis=1)
-        s_vector = (w_sum * p_vector * r_vector) / w_sum
-        minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(s_vector)
-        s_vector = s_vector - minVal
-        s_vector = s_vector / (maxVal - minVal + 1e-3)
-        return s_vector
-
-    def _return_w_matrix(self, centers_array):
-        tot_bins = np.amax(centers_array.shape)
-        w_matrix = np.zeros((tot_bins, tot_bins))
-        for k in range(tot_bins):
-            Q_k = centers_array[k]
-            for j in range(tot_bins):
-                Q_j = centers_array[j]
-                w_matrix[k, j] = self._return_color_weights(Q_k, Q_j)
-        return w_matrix
-
-    def _return_distance_matrix(self, centers_array):
-        tot_bins = np.amax(centers_array.shape)
-        w_matrix = np.zeros((tot_bins, tot_bins))
-        for k in range(tot_bins):
-            Q_k = centers_array[k]
-            for j in range(tot_bins):
-                Q_j = centers_array[j]
-                w_matrix[k, j] = np.sqrt((Q_k[0] - Q_j[0])**2 + (Q_k[1] - Q_j[1])**2 + (Q_k[2] - Q_j[2])**2)
-        return w_matrix
-
-    def _map_labels_to_vector(self, labels_array, vector, n_w, n_h):
-        image = np.zeros((n_h,n_w))
-        labels_matrix = labels_array.reshape((n_h,n_w))
-        #for each pixel finds the probability of saliency
-        for col in range(n_w):
-            for row in range(n_h):
-                bin_index = labels_matrix[row, col]
-                image[row, col] = vector[bin_index]
-
-        image = 255 * image
-        #return cv2.convertScaleAbs(image)
-        return np.uint8(image)
 
 def main():
-    my_map = FasaSaliencyMapping()
-    image = cv2.imread("/home/massimiliano/Desktop/squirrel.png")
-    image_lab, image_quantized, center, label, bincount_array = my_map._return_quantized_image(image)
-    #print(center)
-    #print(bincount_array)
-    #print(label)
-    m_x, m_y, V_x, V_y, w_c = my_map._return_centers_variances(center, label, bincount_array)
-    #print(m_x)
-    #print(m_y)
-    #print(V_x)
-    #print(V_y)
-    n_h = image.shape[0]
-    n_w = image.shape[1]
-    #image_saliency, image_contrast = my_map._return_saliency_and_contrast(label, 8, n_w, n_h, m_x, m_y, V_x, V_y, center, bincount_array)
 
-    w_matrix = my_map._return_w_matrix(center)
-    print(w_matrix)
-    print("")
-    p_vector = my_map._return_p_vector(n_w, n_h, m_x, m_y, V_x, V_y)
-    print(p_vector)
-    print("")
-    #r_vector = my_map._return_r_vector(w_matrix, bincount_array)
-    r_vector = my_map._return_r_vector_mod(center, bincount_array)
-    print(r_vector)
-    print("")
-    s_vector = my_map._return_s_vector(w_matrix, p_vector, r_vector)
-    print(s_vector)
-    print("")
+    image_path = "/home/massimiliano/Desktop/fasa_images/horse.jpg"
+    image = cv2.imread(image_path)
+    my_map = FasaSaliencyMapping(image.shape[0], image.shape[1])
 
-    final_image = my_map._map_labels_to_vector(label, s_vector, n_w, n_h)
+    start = timer()
+    image = cv2.imread(image_path)
+    image_salient = my_map.returnMask(image, tot_bins=8, format='BGR2LAB')
+    end = timer()
+    print("--- %s Tot seconds ---" % (end - start))
 
-    cv2.rectangle(image, (int(m_x[0]),int(m_y[0])), (int(m_x[0]+5),int(m_y[0])+5), [0,0,255], 4)
-    cv2.rectangle(image, (int(m_x[1]),int(m_y[1])), (int(m_x[1]+5),int(m_y[1])+5), [0,0,255], 4)
-    cv2.rectangle(image, (int(m_x[2]),int(m_y[2])), (int(m_x[2]+5),int(m_y[2])+5), [0,0,255], 4)
-    cv2.rectangle(image, (int(m_x[3]),int(m_y[3])), (int(m_x[3]+5),int(m_y[3])+5), [0,0,255], 4)
-    cv2.rectangle(image, (int(m_x[4]),int(m_y[4])), (int(m_x[4]+5),int(m_y[4])+5), [0,0,255], 4)
-    cv2.rectangle(image, (int(m_x[5]),int(m_y[5])), (int(m_x[5]+5),int(m_y[5])+5), [0,0,255], 4)
-    cv2.rectangle(image, (int(m_x[6]),int(m_y[6])), (int(m_x[6]+5),int(m_y[6])+5), [0,0,255], 4)
-    cv2.rectangle(image, (int(m_x[7]),int(m_y[7])), (int(m_x[7]+5),int(m_y[7])+5), [0,0,255], 4)
-    cv2.imshow("image", image)
-    cv2.imshow("saliency", final_image)
-    #cv2.imshow("quantized", image_quantized)
-    #cv2.imshow("lab", image_lab)
+    image_contrast = my_map.return_contrast_image(image)
+    image_probability = my_map.return_probability_image(image)
+    #print ("Number of colours: " + str(number_of_colours))
+
+    cv2.imshow("Original", image)
+    #cv2.imshow("Contrast", image_contrast)
+    cv2.imshow("Saliency Map", image_salient)
+    #cv2.imshow("Probability", image_probability)
+
     while True:
         if cv2.waitKey(33) == ord('q'):
             cv2.destroyAllWindows()
             break
+
+
+def main_webcam():
+    video_capture = cv2.VideoCapture(0)
+    video_capture.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 320)
+    video_capture.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 180)
+    print video_capture.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
+    print video_capture.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
+
+    if(video_capture.isOpened() == False):
+        print("Error: the resource is busy or unvailable")
+        return
+    else:
+        print("The video source has been opened correctly...")
+
+    #Create the main window and move it
+    cv2.namedWindow('Video')
+    cv2.moveWindow('Video', 20, 20)
+
+    #Obtaining the CAM dimension
+    cam_w = int(video_capture.get(3))
+    cam_h = int(video_capture.get(4))
+
+    my_map = FasaSaliencyMapping(cam_h, cam_w)
+
+    while True:
+        start = timer()
+        # Capture frame-by-frame
+        ret, frame = video_capture.read()
+        image_salient = my_map.returnMask(frame, tot_bins=8, format='BGR2LAB')
+        end = timer()
+        print("--- %s Tot seconds ---" % (end - start))
+        print("")
+        cv2.imshow('Video', image_salient)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
 
 if __name__ == "__main__":
     main()
