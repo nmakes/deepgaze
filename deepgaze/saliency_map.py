@@ -62,48 +62,61 @@ class FasaSaliencyMapping:
         minA, maxA, _, _ = cv2.minMaxLoc(image[:, :, 1])
         minB, maxB, _, _ = cv2.minMaxLoc(image[:, :, 2])
 
-        # 2- Histograms in a 3D manifold of shape (tot_bin, tot_bin, tot_bin).
+        # Quantization ranges
+        self.L_range = np.linspace(minL, maxL, num=tot_bins, endpoint=False)
+        self.A_range = np.linspace(minA, maxA, num=tot_bins, endpoint=False)
+        self.B_range = np.linspace(minB, maxB, num=tot_bins, endpoint=False)
+        # Here the image quantized using the discrete bins is created.
+        self.image_quantized = np.dstack((np.digitize(image[:, :, 0], self.L_range, right=False),
+                                          np.digitize(image[:, :, 1], self.A_range, right=False),
+                                          np.digitize(image[:, :, 2], self.B_range, right=False)))
+        self.image_quantized -= 1  # now in range [0,7]
+
+        # it maps the 3D index of hist in a flat 1D array index
+        self.map_3d_1d = np.zeros((tot_bins, tot_bins, tot_bins), dtype=np.int32)
+
+        # Histograms in a 3D manifold of shape (tot_bin, tot_bin, tot_bin).
         # The cv2.calcHist for a 3-channels image generates a cube of size (tot_bins, tot_bins, tot_bins) which is a
         # discretization of the 3-D space defined by hist_range.
         # E.G. if range is 0-255 and it is divided in 5 bins we get -> [0-50][50-100][100-150][150-200][200-250]
         # So if you access the histogram with the indeces: histogram[3,0,2] it is possible to see how many pixels
         # fall in the range channel_1=[150-200], channel_2=[0-50], channel_3=[100-150]
         # data = np.vstack((image[:, :, 0].flat, image[:, :, 1].flat, image[:, :, 2].flat)).astype(np.uint8).T
-        self.L_range = np.linspace(minL, maxL, num=tot_bins, endpoint=True)
-        self.A_range = np.linspace(minA, maxA, num=tot_bins, endpoint=True)
-        self.B_range = np.linspace(minB, maxB, num=tot_bins, endpoint=True)
+        # OpenCV implementation is slightly faster than Numpy
+        self.histogram = cv2.calcHist([image], channels=[0, 1, 2], mask=None,
+                                      histSize=[tot_bins, tot_bins, tot_bins],
+                                      ranges=[minL, maxL, minA, maxA, minB, maxB])
+        # data = np.vstack((image[:, :, 0].flat, image[:, :, 1].flat, image[:, :, 2].flat)).T
+        # self.histogram, edges = np.histogramdd(data, bins=tot_bins, range=((minL, maxL), (minA, maxA), (minB, maxB)))
+        # self.histogram, edges = np.histogramdd(data, bins=tot_bins)
 
-        # Here the image quantized using the discrete bins is created.
-        self.image_quantized = np.dstack((np.digitize(image[:, :, 0], self.L_range, right=True),
-                                          np.digitize(image[:, :, 1], self.A_range, right=True),
-                                          np.digitize(image[:, :, 2], self.B_range, right=True)))
-
-        # Here I compute the histogram manually, this allow saving time because during the image
-        # inspection it is possible to allocate other useful information
-        self.histogram = np.zeros((tot_bins, tot_bins, tot_bins))
-        # it maps the 3D index of hist in a flat 1D array index
-        self.map_3d_1d = np.zeros((tot_bins, tot_bins, tot_bins), dtype=np.int32)
-        # this matrix contains for each bin: mx, my, mx^2, my^2
-        self.centx_matrix  = np.zeros((tot_bins, tot_bins, tot_bins))  # mx
-        self.centy_matrix  = np.zeros((tot_bins, tot_bins, tot_bins))  # my
-        self.centx2_matrix = np.zeros((tot_bins, tot_bins, tot_bins))  # mx^2
-        self.centy2_matrix = np.zeros((tot_bins, tot_bins, tot_bins))  # my^2
-
-        #self.histogram = cv2.calcHist([image], channels=[0, 1, 2], mask=None, histSize=[tot_bins-1, tot_bins-1, tot_bins-1], ranges=[minL, maxL, minA, maxA, minB, maxB])
-        #data = np.vstack((image[:, :, 0].flat, image[:, :, 1].flat, image[:, :, 2].flat)).T
-        #self.histogram, edges = np.histogramdd(data, bins=tot_bins-1, range=((minL, maxL), (minA, maxA), (minB, maxB)))
-
-        for y in xrange(0, self.image_rows):
-            for x in xrange(0, self.image_cols):
-                index = self.image_quantized[y,x]
-                L_id = index[0]
-                A_id = index[1]
-                B_id = index[2]
-                self.centx_matrix[L_id, A_id, B_id] += x + 1e-10
-                self.centy_matrix[L_id, A_id, B_id] += y + 1e-10
-                self.centx2_matrix[L_id, A_id, B_id] += x * x + 1e-10  # np.power(x, 2)
-                self.centy2_matrix[L_id, A_id, B_id] += y * y + 1e-10  # np.power(y, 2)
-                self.histogram[L_id, A_id, B_id] += 1
+        # Get flatten index ID of the image pixels quantized
+        image_indeces = np.vstack((self.image_quantized[:,:,0].flat,
+                                   self.image_quantized[:,:,1].flat,
+                                   self.image_quantized[:,:,2].flat)).astype(np.int32)
+        image_linear = np.ravel_multi_index(image_indeces, (tot_bins, tot_bins, tot_bins))  # in range [0,7]
+        # image_linear = np.reshape(image_linear, (self.image_rows, self.image_cols))
+        # Getting the linear ID index of unique colours
+        self.index_matrix = np.transpose(np.nonzero(self.histogram))
+        hist_index = np.where(self.histogram > 0)  # Included in [0,7]
+        unique_color_linear = np.ravel_multi_index(hist_index, (tot_bins, tot_bins, tot_bins))  # linear ID index
+        self.number_of_colors = np.amax(self.index_matrix.shape)
+        self.centx_matrix = np.zeros(self.number_of_colors)
+        self.centy_matrix = np.zeros(self.number_of_colors)
+        self.centx2_matrix = np.zeros(self.number_of_colors)
+        self.centy2_matrix = np.zeros(self.number_of_colors)
+        # Using the numpy method where() to find the location of each unique colour in the linear ID matrix
+        counter = 0
+        for i in unique_color_linear:
+            # doing only one call to a flat image_linear is faster here
+            where_y, where_x = np.unravel_index(np.where(image_linear == i), (self.image_rows, self.image_cols))
+            #where_x = np.where(image_linear == i)[1]  # columns coord
+            #where_y = np.where(image_linear == i)[0]  # rows coord
+            self.centx_matrix[counter] = np.sum(where_x)
+            self.centy_matrix[counter] = np.sum(where_y)
+            self.centx2_matrix[counter] = np.sum(np.power(where_x, 2))
+            self.centy2_matrix[counter] = np.sum(np.power(where_y, 2))
+            counter += 1
         return image
 
     def _precompute_parameters(self, sigmac=16):
@@ -115,8 +128,6 @@ class FasaSaliencyMapping:
         @return: the number of unique colors
         """
         L_centroid, A_centroid, B_centroid = np.meshgrid(self.L_range, self.A_range, self.B_range)
-        self.index_matrix = np.transpose(np.nonzero(self.histogram))
-        self.number_of_colors = np.amax(self.index_matrix.shape)
         self.unique_pixels = np.zeros((self.number_of_colors, 3))
         for i in xrange(0, self.number_of_colors):
             i_index = self.index_matrix[i, :]
@@ -141,17 +152,17 @@ class FasaSaliencyMapping:
         # Obtaining the values through vectorized operations (very efficient)
         self.contrast = np.dot(self.color_distance_matrix, self.histogram[self.histogram > 0])
         normalization_array = np.dot(self.exponential_color_distance_matrix, self.histogram[self.histogram > 0])
-        self.mx = np.dot(self.exponential_color_distance_matrix, self.centx_matrix[self.centx_matrix > 0])
-        self.my = np.dot(self.exponential_color_distance_matrix, self.centy_matrix[self.centy_matrix > 0])
-        mx2 = np.dot(self.exponential_color_distance_matrix, self.centx2_matrix[self.centx2_matrix > 0])
-        my2 = np.dot(self.exponential_color_distance_matrix, self.centy2_matrix[self.centy2_matrix > 0])
+        self.mx = np.dot(self.exponential_color_distance_matrix, self.centx_matrix)
+        self.my = np.dot(self.exponential_color_distance_matrix, self.centy_matrix)
+        mx2 = np.dot(self.exponential_color_distance_matrix, self.centx2_matrix)
+        my2 = np.dot(self.exponential_color_distance_matrix, self.centy2_matrix)
         # Normalizing the vectors
         self.mx = np.divide(self.mx, normalization_array)
         self.my = np.divide(self.my, normalization_array)
         mx2 = np.divide(mx2, normalization_array)
         my2 = np.divide(my2, normalization_array)
-        self.Vx = np.subtract(mx2, np.power(self.mx, 2))
-        self.Vy = np.subtract(my2, np.power(self.my, 2))
+        self.Vx = np.absolute(np.subtract(mx2, np.power(self.mx, 2))) # TODO: understand why some negative values appear
+        self.Vy = np.absolute(np.subtract(my2, np.power(self.my, 2)))
         return self.mx, self.my, self.Vx, self.Vy
 
     def _calculate_probability(self):
@@ -266,6 +277,10 @@ class FasaSaliencyMapping:
             index = self.map_3d_1d[index[0], index[1], index[2]]
             it[0] = self.saliency[index]
             it.iternext()
+
+        #counter = 0
+        #for i in unique_color_linear:
+        #    where_xy = np.where(image_linear == i)[1]
         end = timer()
         # ret, self.salient_image = cv2.threshold(self.salient_image, 150, 255, cv2.THRESH_BINARY)
         print("--- %s returnMask 'iteration part' seconds ---" % (end - start))
