@@ -11,6 +11,5 @@ setup(name='deepgaze',
   package_data={'deepgaze': ['Readme.md']},
   include_package_data=True,
   license="The MIT License (MIT)",
-  py_modules=['deepgaze'],
   requires = ['numpy', 'cv', 'cv2', 'tensorflow']
  )
