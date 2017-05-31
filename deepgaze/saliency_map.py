@@ -2,6 +2,8 @@
 
 # The MIT License (MIT)
 # Copyright (c) 2017 Massimiliano Patacchiola
+# https://mpatacchiola.github.io
+# https://mpatacchiola.github.io/blog/
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
@@ -12,6 +14,7 @@ import numpy as np
 import cv2
 from timeit import default_timer as timer
 
+DEBUG = False
 
 class FasaSaliencyMapping:
     """Implementation of the FASA (Fast, Accurate, and Size-Aware Salient Object Detection) algorithm.
@@ -199,39 +202,16 @@ class FasaSaliencyMapping:
         self.saliency = 255 * self.saliency / (maxVal - minVal) + 1e-3
         return self.saliency
 
-    def return_contrast_image(self, image):
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-        contrast = self.contrast
-        minVal, maxVal, _, _ = cv2.minMaxLoc(contrast)
-        contrast = contrast - minVal
-        contrast = 255 * contrast / (maxVal - minVal) + 1e-3
-        image_salient = np.zeros((self.image_rows, self.image_cols))
-        for y in xrange(0, self.image_rows):
-            for x in xrange(0, self.image_cols):
-                L_id = int(np.digitize(image[y, x, 0], self.L_range, right=True))
-                A_id = int(np.digitize(image[y, x, 1], self.A_range, right=True))
-                B_id = int(np.digitize(image[y, x, 2], self.B_range, right=True))
-                index = np.argmax(np.all(self.index_matrix == [L_id, A_id, B_id], axis=1))
-                image_salient[y,x] = contrast[index]
-        return np.uint8(image_salient)
-
-    def return_probability_image(self, image):
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-        probability = self.shape_probability
-        minVal, maxVal, _, _ = cv2.minMaxLoc(probability)
-        probability = probability - minVal
-        probability = 255 * probability / (maxVal - minVal) + 1e-3
-        image_salient = np.zeros((self.image_rows, self.image_cols))
-        for y in xrange(0, self.image_rows):
-            for x in xrange(0, self.image_cols):
-                L_id = int(np.digitize(image[y, x, 0], self.L_range, right=True))
-                A_id = int(np.digitize(image[y, x, 1], self.A_range, right=True))
-                B_id = int(np.digitize(image[y, x, 2], self.B_range, right=True))
-                index = np.argmax(np.all(self.index_matrix == [L_id, A_id, B_id], axis=1))
-                image_salient[y,x] = probability[index]
-        return np.uint8(image_salient)
 
     def returnMask(self, image, tot_bins=8, format='BGR2LAB'):
+        """ Return the saliency mask of the input image.
+        
+        @param: image the image to process
+        @param: tot_bins the number of bins used in the histogram
+        @param: format conversion, it can be one of the following:
+            BGR2LAB, BGR2RGB, RGB2LAB, RGB, BGR, LAB
+        @return: the saliency mask
+        """
         if format == 'BGR2LAB':
             image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
         elif format == 'BGR2RGB':
@@ -242,28 +222,28 @@ class FasaSaliencyMapping:
             pass
         else:
             raise ValueError('[DEEPGAZE][SALIENCY-MAP][ERROR] the input format of the image is not supported.')
-        start = timer()
+        if DEBUG: start = timer()
         self._calculate_histogram(image, tot_bins=tot_bins)
-        end = timer()
-        print("--- %s calculate_histogram seconds ---" % (end - start))
-        start = timer()
+        if DEBUG: end = timer()
+        if DEBUG: print("--- %s calculate_histogram seconds ---" % (end - start))
+        if DEBUG: start = timer()
         number_of_colors = self._precompute_parameters()
-        end = timer()
-        print("--- number of colors: " + str(number_of_colors) + " ---")
-        print("--- %s precompute_paramters seconds ---" % (end - start))
-        start = timer()
+        if DEBUG: end = timer()
+        if DEBUG: print("--- number of colors: " + str(number_of_colors) + " ---")
+        if DEBUG: print("--- %s precompute_paramters seconds ---" % (end - start))
+        if DEBUG: start = timer()
         self._bilateral_filtering()
-        end = timer()
-        print("--- %s bilateral_filtering seconds ---" % (end - start))
-        start = timer()
+        if DEBUG: end = timer()
+        if DEBUG: print("--- %s bilateral_filtering seconds ---" % (end - start))
+        if DEBUG: start = timer()
         self._calculate_probability()
-        end = timer()
-        print("--- %s calculate_probability seconds ---" % (end - start))
-        start = timer()
+        if DEBUG: end = timer()
+        if DEBUG: print("--- %s calculate_probability seconds ---" % (end - start))
+        if DEBUG: start = timer()
         self._compute_saliency_map()
-        end = timer()
-        print("--- %s compute_saliency_map seconds ---" % (end - start))
-        start = timer()
+        if DEBUG: end = timer()
+        if DEBUG: print("--- %s compute_saliency_map seconds ---" % (end - start))
+        if DEBUG: start = timer()
         it = np.nditer(self.salient_image, flags=['multi_index'], op_flags=['writeonly'])
         while not it.finished:
             # This part takes 0.1 seconds
@@ -278,77 +258,8 @@ class FasaSaliencyMapping:
             it[0] = self.saliency[index]
             it.iternext()
 
-        #counter = 0
-        #for i in unique_color_linear:
-        #    where_xy = np.where(image_linear == i)[1]
-        end = timer()
+        if DEBUG: end = timer()
         # ret, self.salient_image = cv2.threshold(self.salient_image, 150, 255, cv2.THRESH_BINARY)
-        print("--- %s returnMask 'iteration part' seconds ---" % (end - start))
+        if DEBUG: print("--- %s returnMask 'iteration part' seconds ---" % (end - start))
         return self.salient_image
 
-
-def main():
-
-    image_path = "/home/massimiliano/Desktop/fasa_images/horse.jpg"
-    image = cv2.imread(image_path)
-    my_map = FasaSaliencyMapping(image.shape[0], image.shape[1])
-
-    start = timer()
-    image = cv2.imread(image_path)
-    image_salient = my_map.returnMask(image, tot_bins=8, format='BGR2LAB')
-    end = timer()
-    print("--- %s Tot seconds ---" % (end - start))
-
-    image_contrast = my_map.return_contrast_image(image)
-    image_probability = my_map.return_probability_image(image)
-    #print ("Number of colours: " + str(number_of_colours))
-
-    cv2.imshow("Original", image)
-    #cv2.imshow("Contrast", image_contrast)
-    cv2.imshow("Saliency Map", image_salient)
-    #cv2.imshow("Probability", image_probability)
-
-    while True:
-        if cv2.waitKey(33) == ord('q'):
-            cv2.destroyAllWindows()
-            break
-
-
-def main_webcam():
-    video_capture = cv2.VideoCapture(0)
-    video_capture.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 320)
-    video_capture.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 180)
-    print video_capture.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
-    print video_capture.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
-
-    if(video_capture.isOpened() == False):
-        print("Error: the resource is busy or unvailable")
-        return
-    else:
-        print("The video source has been opened correctly...")
-
-    #Create the main window and move it
-    cv2.namedWindow('Video')
-    cv2.moveWindow('Video', 20, 20)
-
-    #Obtaining the CAM dimension
-    cam_w = int(video_capture.get(3))
-    cam_h = int(video_capture.get(4))
-
-    my_map = FasaSaliencyMapping(cam_h, cam_w)
-
-    while True:
-        start = timer()
-        # Capture frame-by-frame
-        ret, frame = video_capture.read()
-        image_salient = my_map.returnMask(frame, tot_bins=8, format='BGR2LAB')
-        end = timer()
-        print("--- %s Tot seconds ---" % (end - start))
-        print("")
-        cv2.imshow('Video', image_salient)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-
-if __name__ == "__main__":
-    main()
