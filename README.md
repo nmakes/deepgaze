@@ -1,6 +1,8 @@
 Updates
 ----------
 
+**Update 31/05/2017** Implementation of the new package [saliency_map.py](./deepgaze/saliency_map.py). The package contains an implementation of the FASA algorithm for saliency detection [[code]](./examples/ex_fasa_saliency_map/ex_fasa_saliency_map_images.py)
+
 **Update 22/03/2017** Fixed a bug in mask_analysis.py and almost completed a more robust version of the CNN head pose estimator.
 
 **Update 21/11/2016**
@@ -159,6 +161,11 @@ Examples
 - Classify object using their colour fingerprint (histogram intersection) [[blog]](https://mpatacchiola.github.io/blog/2016/11/12/the-simplest-classifier-histogram-intersection.html) [[code]](./examples/ex_color_classification_images/ex_color_classification_image.py)
 <p align="center">
 <img src="doc/images/ex_color_classification_images.png" width="750">
+</p>
+
+- Implementation of the FASA (Fast, Accurate, and Size-Aware Salient Object Detection) algorithm [[code]](./examples/ex_fasa_saliency_map/ex_fasa_saliency_map_images.py)
+<p align="center">
+<img src="doc/images/ex_fasa_saliency_map.png" width="750">
 </p>
 
 Acknowledgments
