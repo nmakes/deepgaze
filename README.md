@@ -1,7 +1,7 @@
 Updates
 ----------
 
-**Update 31/05/2017** Implementation of the new package [saliency_map.py](./deepgaze/saliency_map.py). The package contains an implementation of the FASA algorithm for saliency detection [[code]](./examples/ex_fasa_saliency_map/ex_fasa_saliency_map_images.py)
+**Update 31/05/2017** Implementation of the new package [saliency_map.py](./deepgaze/saliency_map.py). The package contains an implementation of the [FASA](http://ivrl.epfl.ch/research/saliency/fast_saliency) algorithm for saliency detection [[example]](./examples/ex_fasa_saliency_map/ex_fasa_saliency_map_images.py) [[wiki]](http://www.scholarpedia.org/article/Saliency_map)
 
 **Update 22/03/2017** Fixed a bug in mask_analysis.py and almost completed a more robust version of the CNN head pose estimator.
 
@@ -38,8 +38,10 @@ Deepgaze is a library for people detection and tracking which uses **Convolution
 - Head pose estimation (Perspective-n-Point, Convolutional Neural Networks)
 - Face detection (Haar Cascade)
 - Skin and color detection (Range detection, Backprojection)
+- Histogram-based classification (Histogram Intersection)
 - Motion detection (Frame differencing, MOG, MOG2)
 - Motion tracking (Particle filter)
+- Saliency map (FASA)
 
 Deepgaze is based on OpenCV and Tensorflow, some of the best libraries in computer vision and machine learning. Deepgaze is an **open source** project and any contribution is appreciated, feel free to fork the repository and propose integrations. 
 
