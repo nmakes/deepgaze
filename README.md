@@ -163,7 +163,7 @@ Examples
 <img src="doc/images/ex_color_classification_images.png" width="750">
 </p>
 
-- Implementation of the FASA (Fast, Accurate, and Size-Aware Salient Object Detection) algorithm [[code]](./examples/ex_fasa_saliency_map/ex_fasa_saliency_map_images.py)
+- Implementation of the FASA (Fast, Accurate, and Size-Aware Salient Object Detection) algorithm [[code]](./examples/ex_fasa_saliency_map/ex_fasa_saliency_map_images.py) [[wiki]](http://www.scholarpedia.org/article/Saliency_map) [[link]](http://ivrl.epfl.ch/research/saliency/fast_saliency)
 <p align="center">
 <img src="doc/images/ex_fasa_saliency_map.png" width="750">
 </p>
