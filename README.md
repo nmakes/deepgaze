@@ -1,6 +1,8 @@
 Updates
 ----------
 
+**Update 04/06/2017** Article *"Head pose estimation in the wild using Convolutional Neural Networks and adaptive gradient methods"* have been accepted for publication in Pattern Recogntion (Elsevier).
+
 **Update 31/05/2017** Implementation of the new package [saliency_map.py](./deepgaze/saliency_map.py). The package contains an implementation of the [FASA](http://ivrl.epfl.ch/research/saliency/fast_saliency) algorithm for saliency detection [[example]](./examples/ex_fasa_saliency_map/ex_fasa_saliency_map_images.py) [[wiki]](http://www.scholarpedia.org/article/Saliency_map)
 
 **Update 22/03/2017** Fixed a bug in mask_analysis.py and almost completed a more robust version of the CNN head pose estimator.
@@ -24,7 +26,7 @@ New package [color_detection.py](./deepgaze/color_detection.py) added. Using the
 Working example on how to use CNNs for the pitch estimation [[code]](./examples/ex_cnn_headp_pose_estimation_images/ex_cnn_head_pose_estimation_images_pitch.py)
 Working example on how to use CNNs for both yaw and pitch estimation [[code]](./examples/ex_cnn_headp_pose_estimation_images/ex_cnn_head_pose_estimation_images_pitch_yaw.py)
 
-**Update 5/10/2016**:
+**Update 05/10/2016**:
 Working example on how to use CNNs for head pose estimation (for the moment only yaw angle) [[code]](./examples/ex_cnn_headp_pose_estimation_images/ex_cnn_head_pose_estimation_images.py)
 
 **Update 20/09/2016**:
@@ -45,8 +47,9 @@ Deepgaze is a library for people detection and tracking which uses **Convolution
 
 Deepgaze is based on OpenCV and Tensorflow, some of the best libraries in computer vision and machine learning. Deepgaze is an **open source** project and any contribution is appreciated, feel free to fork the repository and propose integrations. 
 
-This library is the result of my recent work which is under revision:
-*Head Pose Estimation in the Wild using Convolutional Neural Networks and Adaptive Gradient Methods*
+This library is the result of my recent work, **if you use the library in academic work please cite the following paper**:
+
+Patacchiola, M., & Cangelosi, A. (2017). *Head pose estimation in the wild using Convolutional Neural Networks and adaptive gradient methods*. Pattern Recognition, http://dx.doi.org/10.1016/j.patcog.2017.06.009.
 
 What is a Convolutional Neural Network?
 ------------------------------
