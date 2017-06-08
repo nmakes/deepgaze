@@ -111,16 +111,13 @@ class HaarFaceDetector:
         if(lastFaceType == 4): order = (4, 1, 2, 3, 5)
         if(lastFaceType == 5): order = (5, 1, 2, 3, 4)
 
-
         for position in order:
-
             #Cascade: frontal faces
             if(runFrontal==True and position==1):
                 self._findFrontalFace(inputImg, frontalScaleFactor, minSizeX, minSizeY)
                 if(self.is_face_present == True):
                     self.face_type = 1
                     return (self.face_x, self.face_y, self.face_w, self.face_h)
-
             #Cascade: frontal faces rotated (Left)
             if(runFrontalRotated==True and position==2):
                 rows, cols = numpy.shape(inputImg)
@@ -130,7 +127,6 @@ class HaarFaceDetector:
                 if(self.is_face_present == True):
                     self.face_type = 2
                     return (self.face_x, self.face_y, self.face_w, self.face_h)
-
             #Cascade: frontal faces rotated (Right)
             if(runFrontalRotated==True and position==3):
                 rows, cols = numpy.shape(inputImg)
@@ -140,14 +136,12 @@ class HaarFaceDetector:
                 if(self.is_face_present == True):
                     self.face_type = 3
                     return (self.face_x, self.face_y, self.face_w, self.face_h)
-    
             #Cascade: left profiles
             if(runLeft==True and position==4):
                 self._findProfileFace(inputImg, leftScaleFactor, minSizeX, minSizeY)
                 if(self.is_face_present == True):
                     self.face_type = 4
                     return (self.face_x, self.face_y, self.face_w, self.face_h)
-
             #Cascade: right profiles
             if(runRight==True and position==5):
                 flipped_inputImg = cv2.flip(inputImg,1) 
@@ -158,20 +152,19 @@ class HaarFaceDetector:
                     self.face_x = f_w - (self.face_x + self.face_w) #reshape the x to unfold the mirroring
                     return (self.face_x, self.face_y, self.face_w, self.face_h)
 
-
         #It returns zeros if nothing is found
         self.face_type = 0    
         self.is_face_present = False 
         return (0, 0, 0, 0)
 
-    def returnMultipleFaces(self, inputImg,
-                           runFrontal=True, runFrontalRotated=True,
-                           runLeft=True, runRight=True,
-                           frontalScaleFactor=1.1, rotatedFrontalScaleFactor=1.1,
-                           leftScaleFactor=1.1, rightScaleFactor=1.1,
-                           minSizeX=30, minSizeY=30,
-                           rotationAngleCCW=30, rotationAngleCW=-30,
-                           lastFaceType=0):
+    def returnMultipleFacesPosition(self, inputImg,
+                                    runFrontal=True, runFrontalRotated=True,
+                                    runLeft=True, runRight=True,
+                                    frontalScaleFactor=1.1, rotatedFrontalScaleFactor=1.1,
+                                    leftScaleFactor=1.1, rightScaleFactor=1.1,
+                                    minSizeX=30, minSizeY=30,
+                                    rotationAngleCCW=30, rotationAngleCW=-30,
+                                    lastFaceType=0):
         """Find multiple faces (frontal or profile) in the input image 
 
         Find a face and return the position. To find the right profile the input 
@@ -193,20 +186,17 @@ class HaarFaceDetector:
         @param rotationAngleCCW (positive) angle for rotated face detector
         @param rotationAngleCW (negative) angle for rotated face detector
         @param lastFaceType to speed up the chain of classifier
-        @return allTheFaces list of coordinates x, y, width, heigth
+        @return list of coordinates (x, y, width, heigth) for all the faces found
 
         Return code for face_type variable: 1=Frontal, 2=FrontRotLeft, 
         3=FronRotRight, 4=ProfileLeft, 5=ProfileRight.
         """
-
         allTheFaces = numpy.ndarray((0,4), numpy.int32)
-
         #Cascade: frontal faces
         if(runFrontal==True):
             faces = self._findMultipleFrontalFaces(inputImg, frontalScaleFactor, minSizeX, minSizeY)
             if(self.is_face_present == True):
                 allTheFaces = numpy.append(allTheFaces,faces,axis=0)
-
         #Cascade: frontal faces rotated (Left)
         if(runFrontalRotated==True):
             rows, cols = numpy.shape(inputImg)
@@ -215,7 +205,6 @@ class HaarFaceDetector:
             faces = self._findMultipleFrontalFaces(inputImgRot, rotatedFrontalScaleFactor, minSizeX, minSizeY)
             if(self.is_face_present == True):
                 allTheFaces = numpy.append(allTheFaces, faces, axis=0)
-
         #Cascade: frontal faces rotated (Right)
         if(runFrontalRotated==True):
             rows, cols = numpy.shape(inputImg)
@@ -224,20 +213,17 @@ class HaarFaceDetector:
             faces = self._findMultipleFrontalFaces(inputImgRot, rotatedFrontalScaleFactor, minSizeX, minSizeY)
             if(self.is_face_present == True):
                 allTheFaces = numpy.append(allTheFaces, faces, axis=0)
-
         #Cascade: left profiles
         if(runLeft==True):
             faces = self._findMultipleProfileFaces(inputImg, leftScaleFactor, minSizeX, minSizeY)
             if(self.is_face_present == True):
                 allTheFaces = numpy.append(allTheFaces, faces, axis=0)
-
         #Cascade: right profiles
         if(runRight==True):
             flipped_inputImg = cv2.flip(inputImg,1)
             faces = self._findMultipleProfileFaces(flipped_inputImg, rightScaleFactor, minSizeX, minSizeY)
             if(self.is_face_present == True):
                 allTheFaces = numpy.append(allTheFaces, faces, axis=0)
-
         return allTheFaces.tolist()
 
 
@@ -386,8 +372,3 @@ class HaarFaceDetector:
         else:
             self.is_face_present = True
             return faces
-
-
-
-
-
