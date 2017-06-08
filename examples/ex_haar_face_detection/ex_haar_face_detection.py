@@ -12,13 +12,14 @@
 
 
 from deepgaze.haar_cascade import haarCascade
+from deepgaze.face_detection import HaarFaceDetector
 import cv2
 
 #Declaring the face detector object and loading the XML config file
 my_cascade = haarCascade("../../etc/xml/haarcascade_frontalface_alt.xml", "../../etc/xml/haarcascade_profileface.xml")
 
 #Reading the image in black/withe
-image = cv2.imread("./bellucci.jpg",0)
+image = cv2.imread("./1.jpg",0)
 
 #Calling the findFace method
 my_cascade.findFace(image, runFrontal=True, runFrontalRotated=True, 
@@ -28,6 +29,17 @@ my_cascade.findFace(image, runFrontal=True, runFrontalRotated=True,
                     minSizeX=64, minSizeY=64, 
                     rotationAngleCCW=30, rotationAngleCW=-30)
 
+hfd = HaarFaceDetector("../../etc/xml/haarcascade_frontalface_alt.xml", "../../etc/xml/haarcascade_profileface.xml")
+allTheFaces = hfd.returnMultipleFaces(image)
+print allTheFaces
+for element in allTheFaces:
+    print element
+    face_x1 = int(element[0])
+    face_y1 = int(element[1])
+    face_x2 = int(face_x1+element[2])
+    face_y2 = int(face_y1+element[3])
+    cv2.rectangle(image, (face_x1, face_y1), (face_x2, face_y2), [255, 0, 0])
+
 #The coords of the face are saved in the class object
 face_x1 = my_cascade.face_x
 face_y1 = my_cascade.face_y
@@ -35,7 +47,7 @@ face_x2 = my_cascade.face_x + my_cascade.face_w
 face_y2 = my_cascade.face_y + my_cascade.face_h
 face_w = my_cascade.face_w 
 face_h = my_cascade.face_h
- 
+
 
 # Print this when no face is detected
 if(my_cascade.face_type == 0): 
