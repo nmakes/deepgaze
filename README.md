@@ -37,7 +37,7 @@ Work in progress. The code provided at the moment does not still implement gaze 
 
 What is Deepgaze?
 ----------
-Deepgaze is a library for human-computer interaction, people detection and tracking which uses **Convolutional Neural Networks** (CNNs) for face detection, head pose estimation and classification. The FOA can be approximately estimated finding the **head orientation**. This is particularly useful when the eyes are covered, or when the user is too far from the camera to grab the eye region with a good resolution. When the eye region is visible it is possible to estimate the **gaze direction**, which is much more informative and can give a good indication of the FOA. Deepgaze contains useful packages for:
+Deepgaze is a library for human-computer interaction, people detection and tracking which uses **Convolutional Neural Networks** (CNNs) for face detection, head pose estimation and classification. The focus of attention of a person can be approximately estimated finding the **head orientation**. This is particularly useful when the eyes are covered, or when the user is too far from the camera to grab the eye region with a good resolution. When the eye region is visible it is possible to estimate the **gaze direction**, which is much more informative and can give a good indication of the FOA. Deepgaze contains useful packages for:
 
 - Head pose estimation (Perspective-n-Point, Convolutional Neural Networks)
 - Face detection (Haar Cascade)
@@ -58,16 +58,6 @@ Why should I use Deepgaze?
 Because Deepgaze **makes your life easier!**
 The implementation of many algorithms such as face detectors, pose estimators and object classificators can be painful. Deepgaze has been designed to implement those algorithms in **a few lines of code**. Deepgaze is helpful for both beginners and advanced users who want to save time. All the code contained in Deepgaze is optimised and it is based on state-of-the-art algorithms.
 
-Main contributors
--------------------
-This is an updated list of the **main contributors** of the project. **We are looking for contributors!** If you want to contribute adding a new module or improving an existing one, [send an email to our team!](https://www.google.com/recaptcha/mailhide/d?k=016tAI_yFvIWy5xYnHJtWEng==&c=X81f3FghEKqyIcS9KuoQNEU-9Nea8BG9d_NXgX4M005wtfBYv_ZRTm7Xr5ygEOUP)
-
-- [Massimiliano Patacchiola](http://mpatacchiola.github.io/): project leader and main contributor
-- [Joel Gooch](https://www.linkedin.com/in/joel-gooch-001458132/?ppe=1): head pose estimator
-- [Ishit Mehta](https://github.com/ishit): CNN-cascade face detector
-- [Luca Surace](https://github.com/lukeoverride): Haar-cascade multi-face detector
-
-
 What is a Convolutional Neural Network?
 ------------------------------
 A convolutional neural network (CNN, or ConvNet) is a type of feed-forward artificial neural network in which the connectivity pattern between its neurons is inspired by the organization of the animal visual cortex, whose individual neurons are arranged in such a way that they respond to overlapping regions tiling the visual field. Convolutional networks were inspired by biological processes and are variations of multilayer perceptrons designed to use minimal amounts of preprocessing. They have wide applications in image and video recognition, recommender systems and natural language processing [[wiki]](https://en.wikipedia.org/wiki/Convolutional_neural_network)
@@ -76,6 +66,14 @@ A convolutional neural network (CNN, or ConvNet) is a type of feed-forward artif
 <img src="doc/images/figure_cnn.png" width="750">
 </p>
 
+Main contributors
+-------------------
+This is an updated list of the **main contributors** of the project. **We are looking for contributors!** If you want to contribute adding a new module or improving an existing one, [send an email to our team!](https://www.google.com/recaptcha/mailhide/d?k=016tAI_yFvIWy5xYnHJtWEng==&c=X81f3FghEKqyIcS9KuoQNEU-9Nea8BG9d_NXgX4M005wtfBYv_ZRTm7Xr5ygEOUP)
+
+- [Massimiliano Patacchiola](http://mpatacchiola.github.io/): project leader and main contributor
+- [Joel Gooch](https://www.linkedin.com/in/joel-gooch-001458132/?ppe=1): head pose estimator
+- [Ishit Mehta](https://github.com/ishit): CNN-cascade face detector
+- [Luca Surace](https://github.com/lukeoverride): Haar-cascade multi-face detector
 
 Prerequisites
 ------------
@@ -112,7 +110,7 @@ Download the repository from [[here]](https://github.com/mpatacchiola/deepgaze/a
 git clone https://github.com/mpatacchiola/deepgaze.git
 ```
 
-To install the package you have to enter in the deepgaze folder and run the setup.py script (it may require root privileges):
+To install the package you have to enter in the Deepgaze folder and run the setup.py script (it may require root privileges):
 
 ```shell
 cd deepgaze
@@ -190,7 +188,7 @@ Examples
 <img src="doc/images/ex_fasa_saliency_map.png" width="750">
 </p>
 
-Acknowledgments
+Acknowledgements
 ---------------
 
 - The example "head pose estimation using Perspective-n-Point" is partially based on the C++ version you can find [here](https://github.com/severin-lemaignan/gazr), and on the workshop "Developing an attention system for a social robot" which was part of the 2nd International Summer School on Social Human-Robot Interaction.
