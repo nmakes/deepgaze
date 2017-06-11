@@ -71,9 +71,9 @@ Main contributors
 This is an updated list of the **main contributors** of the project. **We are looking for contributors!** If you want to contribute adding a new module or improving an existing one, [send an email to our team!](https://www.google.com/recaptcha/mailhide/d?k=016tAI_yFvIWy5xYnHJtWEng==&c=X81f3FghEKqyIcS9KuoQNEU-9Nea8BG9d_NXgX4M005wtfBYv_ZRTm7Xr5ygEOUP)
 
 - [Massimiliano Patacchiola](http://mpatacchiola.github.io/): project leader and main contributor
-- [Joel Gooch](https://www.linkedin.com/in/joel-gooch-001458132/?ppe=1): head pose estimator
-- [Ishit Mehta](https://github.com/ishit): CNN-cascade face detector
-- [Luca Surace](https://github.com/lukeoverride): Haar-cascade multi-face detector
+- [Joel Gooch](https://www.linkedin.com/in/joel-gooch-001458132/?ppe=1): head pose estimation
+- [Ishit Mehta](https://github.com/ishit): CNN-cascade face detection
+- [Luca Surace](https://github.com/lukeoverride): Haar-cascade multi-face detection
 
 Prerequisites
 ------------
