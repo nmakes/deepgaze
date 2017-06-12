@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #The MIT License (MIT)
-#Copyright (c) 2016 Massimiliano Patacchiola
+#Copyright (c) 2016 Massimiliano Patacchiola, 2017 Luca Surace
 #
 #THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
 #MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
@@ -111,16 +111,13 @@ class HaarFaceDetector:
         if(lastFaceType == 4): order = (4, 1, 2, 3, 5)
         if(lastFaceType == 5): order = (5, 1, 2, 3, 4)
 
-
         for position in order:
-
             #Cascade: frontal faces
             if(runFrontal==True and position==1):
                 self._findFrontalFace(inputImg, frontalScaleFactor, minSizeX, minSizeY)
                 if(self.is_face_present == True):
                     self.face_type = 1
                     return (self.face_x, self.face_y, self.face_w, self.face_h)
-
             #Cascade: frontal faces rotated (Left)
             if(runFrontalRotated==True and position==2):
                 rows, cols = numpy.shape(inputImg)
@@ -130,7 +127,6 @@ class HaarFaceDetector:
                 if(self.is_face_present == True):
                     self.face_type = 2
                     return (self.face_x, self.face_y, self.face_w, self.face_h)
-
             #Cascade: frontal faces rotated (Right)
             if(runFrontalRotated==True and position==3):
                 rows, cols = numpy.shape(inputImg)
@@ -140,14 +136,12 @@ class HaarFaceDetector:
                 if(self.is_face_present == True):
                     self.face_type = 3
                     return (self.face_x, self.face_y, self.face_w, self.face_h)
-    
             #Cascade: left profiles
             if(runLeft==True and position==4):
                 self._findProfileFace(inputImg, leftScaleFactor, minSizeX, minSizeY)
                 if(self.is_face_present == True):
                     self.face_type = 4
                     return (self.face_x, self.face_y, self.face_w, self.face_h)
-
             #Cascade: right profiles
             if(runRight==True and position==5):
                 flipped_inputImg = cv2.flip(inputImg,1) 
@@ -158,11 +152,79 @@ class HaarFaceDetector:
                     self.face_x = f_w - (self.face_x + self.face_w) #reshape the x to unfold the mirroring
                     return (self.face_x, self.face_y, self.face_w, self.face_h)
 
-
         #It returns zeros if nothing is found
         self.face_type = 0    
         self.is_face_present = False 
         return (0, 0, 0, 0)
+
+    def returnMultipleFacesPosition(self, inputImg,
+                                    runFrontal=True, runFrontalRotated=True,
+                                    runLeft=True, runRight=True,
+                                    frontalScaleFactor=1.1, rotatedFrontalScaleFactor=1.1,
+                                    leftScaleFactor=1.1, rightScaleFactor=1.1,
+                                    minSizeX=30, minSizeY=30,
+                                    rotationAngleCCW=30, rotationAngleCW=-30,
+                                    lastFaceType=0):
+        """Find multiple faces (frontal or profile) in the input image 
+
+        Find a face and return the position. To find the right profile the input 
+        image is vertically flipped, this is done because the training 
+        file for profile faces was trained only on left profile. When all the
+        classifiers are working the computation can be slow. To solve the problem
+        it is possible to accurately tune the minSize and ScaleFactor parameters.
+        @param inputImg the image where the cascade will be called
+        @param runFrontal if True it looks for frontal faces
+        @param runFrontalRotated if True it looks for frontal rotated faces
+        @param runLeft if True it looks for left profile faces
+        @param runRight if True it looks for right profile faces
+        @param frontalScaleFactor=1.1
+        @param rotatedFrontalScaleFactor=1.1
+        @param leftScaleFactor=1.1
+        @param rightScaleFactor=1.1
+        @param minSizeX=30
+        @param minSizeX=30
+        @param rotationAngleCCW (positive) angle for rotated face detector
+        @param rotationAngleCW (negative) angle for rotated face detector
+        @param lastFaceType to speed up the chain of classifier
+        @return list of coordinates (x, y, width, heigth) for all the faces found
+
+        Return code for face_type variable: 1=Frontal, 2=FrontRotLeft, 
+        3=FronRotRight, 4=ProfileLeft, 5=ProfileRight.
+        """
+        allTheFaces = numpy.ndarray((0,4), numpy.int32)
+        #Cascade: frontal faces
+        if(runFrontal==True):
+            faces = self._findMultipleFrontalFaces(inputImg, frontalScaleFactor, minSizeX, minSizeY)
+            if(self.is_face_present == True):
+                allTheFaces = numpy.append(allTheFaces,faces,axis=0)
+        #Cascade: frontal faces rotated (Left)
+        if(runFrontalRotated==True):
+            rows, cols = numpy.shape(inputImg)
+            M = cv2.getRotationMatrix2D((cols/2,rows/2),rotationAngleCCW,1) #30 degrees ccw rotation
+            inputImgRot = cv2.warpAffine(inputImg, M, (cols,rows))
+            faces = self._findMultipleFrontalFaces(inputImgRot, rotatedFrontalScaleFactor, minSizeX, minSizeY)
+            if(self.is_face_present == True):
+                allTheFaces = numpy.append(allTheFaces, faces, axis=0)
+        #Cascade: frontal faces rotated (Right)
+        if(runFrontalRotated==True):
+            rows, cols = numpy.shape(inputImg)
+            M = cv2.getRotationMatrix2D((cols/2,rows/2),rotationAngleCW,1) #30 degrees cw rotation
+            inputImgRot = cv2.warpAffine(inputImg, M, (cols,rows))
+            faces = self._findMultipleFrontalFaces(inputImgRot, rotatedFrontalScaleFactor, minSizeX, minSizeY)
+            if(self.is_face_present == True):
+                allTheFaces = numpy.append(allTheFaces, faces, axis=0)
+        #Cascade: left profiles
+        if(runLeft==True):
+            faces = self._findMultipleProfileFaces(inputImg, leftScaleFactor, minSizeX, minSizeY)
+            if(self.is_face_present == True):
+                allTheFaces = numpy.append(allTheFaces, faces, axis=0)
+        #Cascade: right profiles
+        if(runRight==True):
+            flipped_inputImg = cv2.flip(inputImg,1)
+            faces = self._findMultipleProfileFaces(flipped_inputImg, rightScaleFactor, minSizeX, minSizeY)
+            if(self.is_face_present == True):
+                allTheFaces = numpy.append(allTheFaces, faces, axis=0)
+        return allTheFaces.tolist()
 
 
 
@@ -257,9 +319,56 @@ class HaarFaceDetector:
              self.face_w = faces[max_index][2]
              self.face_h = faces[max_index][3]
              self.is_face_present = True
-             return (faces[max_index][0], faces[max_index][1], faces[max_index][2], faces[max_index][3]) 
+             return (faces[max_index][0], faces[max_index][1], faces[max_index][2], faces[max_index][3])
 
+    def _findMultipleFrontalFaces(self, inputImg, scaleFactor=1.1, minSizeX=30, minSizeY=30, minNeighbors=4):
+        """Find a frontal face in the input image
 
+        @param inputImg the image where the cascade will be called
+        """
 
+        # Cascade: frontal faces
+        faces = self._frontalCascade.detectMultiScale(
+            inputImg,
+            scaleFactor=scaleFactor,
+            minNeighbors=minNeighbors,
+            minSize=(minSizeX, minSizeY),
+            flags=cv2.cv.CV_HAAR_SCALE_IMAGE
+        )
 
+        if (len(faces) == 0):
+            self.face_x = 0
+            self.face_y = 0
+            self.face_w = 0
+            self.face_h = 0
+            self.is_face_present = False
+            return (0, 0, 0, 0)
+        else:
+            self.is_face_present = True
+            return faces
 
+    def _findMultipleProfileFaces(self, inputImg, scaleFactor=1.1, minSizeX=30, minSizeY=30, minNeighbors=4):
+        """Find a profile face in the input image
+
+        @param inputImg the image where the cascade will be called
+        """
+
+        # Cascade: left profile
+        faces = self._profileCascade.detectMultiScale(
+            inputImg,
+            scaleFactor=scaleFactor,
+            minNeighbors=minNeighbors,
+            minSize=(minSizeX, minSizeY),
+            flags=cv2.cv.CV_HAAR_SCALE_IMAGE
+        )
+
+        if (len(faces) == 0):
+            self.face_x = 0
+            self.face_y = 0
+            self.face_w = 0
+            self.face_h = 0
+            self.is_face_present = False
+            return (0, 0, 0, 0)
+        else:
+            self.is_face_present = True
+            return faces

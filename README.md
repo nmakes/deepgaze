@@ -1,7 +1,9 @@
 Updates
 ----------
 
-**Update 04/06/2017** Article *"Head pose estimation in the wild using Convolutional Neural Networks and adaptive gradient methods"* have been accepted for publication in Pattern Recogntion (Elsevier).
+**Update 10/06/2017** The PDF of the article *"Head pose estimation in the wild using Convolutional Neural Networks and adaptive gradient methods"* is available for **free download** in the next 50 days using [this special link](https://authors.elsevier.com/a/1VBdC77nKOnOt)
+
+**Update 04/06/2017** Article *"Head pose estimation in the wild using Convolutional Neural Networks and adaptive gradient methods"* have been accepted for publication in Pattern Recogntion (Elsevier). The Deepgaze CNN head pose estimator module is based on this work.
 
 **Update 31/05/2017** Implementation of the new package [saliency_map.py](./deepgaze/saliency_map.py). The package contains an implementation of the [FASA](http://ivrl.epfl.ch/research/saliency/fast_saliency) algorithm for saliency detection [[example]](./examples/ex_fasa_saliency_map/ex_fasa_saliency_map_images.py) [[wiki]](http://www.scholarpedia.org/article/Saliency_map)
 
@@ -33,9 +35,9 @@ Working example on how to use CNNs for head pose estimation (for the moment only
 Work in progress. The code provided at the moment does not still implement gaze detection. There is a beta version of the class which implements the CNN head pose estimator of the yaw angle [[code]](https://github.com/mpatacchiola/deepgaze/blob/master/deepgaze/head_pose_estimation.py). You can use it loading the variables stored in this [[file]](https://github.com/mpatacchiola/deepgaze/blob/master/etc/tensorflow/head_pose/yaw/cnn_cccdd_30k).
 
 
-What is deepgaze?
+What is Deepgaze?
 ----------
-Deepgaze is a library for people detection and tracking which uses **Convolutional Neural Networks** (CNNs) to estimate the Focus of Attention (FOA) of users. The FOA can be approximately estimated finding the **head orientation**. This is particularly useful when the eyes are covered, or when the user is too far from the camera to grab the eye region with a good resolution. When the eye region is visible it is possible to estimate the **gaze direction**, which is much more informative and can give a good indication of the FOA. Deepgaze contains useful packages for:
+Deepgaze is a library for human-computer interaction, people detection and tracking which uses **Convolutional Neural Networks** (CNNs) for face detection, head pose estimation and classification. The focus of attention of a person can be approximately estimated finding the **head orientation**. This is particularly useful when the eyes are covered, or when the user is too far from the camera to grab the eye region with a good resolution. When the eye region is visible it is possible to estimate the **gaze direction**, which is much more informative and can give a good indication of the FOA. Deepgaze contains useful packages for:
 
 - Head pose estimation (Perspective-n-Point, Convolutional Neural Networks)
 - Face detection (Haar Cascade)
@@ -47,9 +49,14 @@ Deepgaze is a library for people detection and tracking which uses **Convolution
 
 Deepgaze is based on OpenCV and Tensorflow, some of the best libraries in computer vision and machine learning. Deepgaze is an **open source** project and any contribution is appreciated, feel free to fork the repository and propose integrations. 
 
-This library is the result of my recent work, **if you use the library in academic work please cite the following paper**:
+This library is the result of a recent work, **if you use the library in academic work please cite the following paper**:
 
 Patacchiola, M., & Cangelosi, A. (2017). *Head pose estimation in the wild using Convolutional Neural Networks and adaptive gradient methods*. Pattern Recognition, http://dx.doi.org/10.1016/j.patcog.2017.06.009.
+
+Why should I use Deepgaze?
+--------------------------
+Because Deepgaze **makes your life easier!**
+The implementation of many algorithms such as face detectors, pose estimators and object classificators can be painful. Deepgaze has been designed to implement those algorithms in **a few lines of code**. Deepgaze is helpful for both beginners and advanced users who want to save time. All the code contained in Deepgaze is optimised and it is based on state-of-the-art algorithms.
 
 What is a Convolutional Neural Network?
 ------------------------------
@@ -59,6 +66,14 @@ A convolutional neural network (CNN, or ConvNet) is a type of feed-forward artif
 <img src="doc/images/figure_cnn.png" width="750">
 </p>
 
+Main contributors
+-------------------
+This is an updated list of the **main contributors** of the project. **We are looking for contributors!** If you want to contribute adding a new module or improving an existing one, [send an email to our team!](https://www.google.com/recaptcha/mailhide/d?k=016tAI_yFvIWy5xYnHJtWEng==&c=X81f3FghEKqyIcS9KuoQNEU-9Nea8BG9d_NXgX4M005wtfBYv_ZRTm7Xr5ygEOUP)
+
+- [Massimiliano Patacchiola](http://mpatacchiola.github.io/): project leader and main contributor
+- [Joel Gooch](https://www.linkedin.com/in/joel-gooch-001458132/?ppe=1): head pose estimator
+- [Ishit Mehta](https://github.com/ishit): CNN-cascade face detector
+- [Luca Surace](https://github.com/lukeoverride): Haar-cascade multi-face detector
 
 Prerequisites
 ------------
@@ -95,7 +110,7 @@ Download the repository from [[here]](https://github.com/mpatacchiola/deepgaze/a
 git clone https://github.com/mpatacchiola/deepgaze.git
 ```
 
-To install the package you have to enter in the deepgaze folder and run the setup.py script (it may require root privileges):
+To install the package you have to enter in the Deepgaze folder and run the setup.py script (it may require root privileges):
 
 ```shell
 cd deepgaze
@@ -173,7 +188,7 @@ Examples
 <img src="doc/images/ex_fasa_saliency_map.png" width="750">
 </p>
 
-Acknowledgments
+Acknowledgements
 ---------------
 
 - The example "head pose estimation using Perspective-n-Point" is partially based on the C++ version you can find [here](https://github.com/severin-lemaignan/gazr), and on the workshop "Developing an attention system for a social robot" which was part of the 2nd International Summer School on Social Human-Robot Interaction.
