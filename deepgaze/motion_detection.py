@@ -90,7 +90,7 @@ class MogMotionDetector:
     colour space that makes use of our background model. A comparison
     has been made between the two algorithms. The results show the 
     speed of learning and the accuracy of the model using our update 
-    algorithm over the Grimson et al’s tracker. When incorporate with 
+    algorithm over the Grimson et al tracker. When incorporate with 
     the shadow detection, our method results in far better segmentation
     than that of Grimson et al.
     """
