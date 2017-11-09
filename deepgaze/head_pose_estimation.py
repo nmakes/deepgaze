@@ -149,11 +149,11 @@ class CnnHeadPoseEstimator:
             if(DEBUG == True): print("SHAPE out: " + str(out.get_shape()))
 
             return out
- 
+
         # Get the result from the model
         self.cnn_yaw_output = model(self.tf_yaw_input_vector)
 
- 
+
     def load_yaw_variables(self, YawFilePath):
         """ Load varibles from a tensorflow file
 
@@ -208,16 +208,16 @@ class CnnHeadPoseEstimator:
              image_resized = cv2.resize(image, (64, 64), interpolation = cv2.INTER_AREA)
              image_normalised = np.add(image_resized, -127) #normalisation of the input
              feed_dict = {self.tf_yaw_input_vector : image_normalised}
-             yaw_raw = self._sess.run([self.cnn_yaw_output], feed_dict=feed_dict)       
+             yaw_raw = self._sess.run([self.cnn_yaw_output], feed_dict=feed_dict)
              yaw_vector = np.multiply(yaw_raw, 100.0) #cnn-out is in range [-1, +1] --> [-100, + 100]
              if(radians==True): return np.multiply(yaw_vector, np.pi/180.0) #to radians
              else: return yaw_vector
          #wrong shape          
          if(h != w or w<64 or h<64):
              if h != w :
-		raise ValueError('[DEEPGAZE] CnnHeadPoseEstimator(return_yaw): the image given as input has wrong shape. Height must equal Width. Height=%d,Width=%d'%(h,w))
-             else:		
-             	raise ValueError('[DEEPGAZE] CnnHeadPoseEstimator(return_yaw): the image given as input has wrong shape. Height and Width must be >= 64 pixel')
+                raise ValueError('[DEEPGAZE] CnnHeadPoseEstimator(return_yaw): the image given as input has wrong shape. Height must equal Width. Height=%d,Width=%d'%(h,w))
+             else:
+                raise ValueError('[DEEPGAZE] CnnHeadPoseEstimator(return_yaw): the image given as input has wrong shape. Height and Width must be >= 64 pixel')
          #wrong number of channels
          if(d!=3):
              raise ValueError('[DEEPGAZE] CnnHeadPoseEstimator(return_yaw): the image given as input does not have 3 channels, this function accepts only colour images.')
@@ -262,8 +262,8 @@ class CnnHeadPoseEstimator:
 
         # dropout (keep probability)
         #self.keep_prob = tf.placeholder(tf.float32, name="keep_prob")
- 
-        # Model.
+
+        # Model
         def model(data):
 
             X = tf.reshape(data, shape=[-1, 64, 64, 3])
@@ -279,7 +279,7 @@ class CnnHeadPoseEstimator:
             norm1 = tf.nn.lrn(pool1, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75)
             # Apply Dropout
             #norm1 = tf.nn.dropout(norm1, _dropout)
- 
+
             # Convolution Layer 2
             conv2 = tf.tanh(tf.nn.bias_add(tf.nn.conv2d(norm1, self.hp_conv2_weights, strides=[1, 1, 1, 1], padding='SAME'),self.hp_conv2_biases))
             if(DEBUG == True): print("SHAPE conv2: " + str(conv2.get_shape()))
@@ -328,8 +328,8 @@ class CnnHeadPoseEstimator:
         self._num_labels = 1
         # Input data [batch_size, image_size, image_size, channels]
         self.tf_roll_input_vector = tf.placeholder(tf.float32, shape=(64, 64, 3))
-        
-        # Variables.
+
+        # Variables
         #Conv layer
         #[patch_size, patch_size, num_channels, depth]
         self.hr_conv1_weights = tf.Variable(tf.truncated_normal([3, 3, 3, 64], stddev=0.1))
@@ -358,8 +358,8 @@ class CnnHeadPoseEstimator:
 
         # dropout (keep probability)
         #self.keep_prob = tf.placeholder(tf.float32, name="keep_prob")
- 
-        # Model.
+
+        # Model
         def model(data):
 
             X = tf.reshape(data, shape=[-1, 64, 64, 3])
@@ -375,7 +375,7 @@ class CnnHeadPoseEstimator:
             norm1 = tf.nn.lrn(pool1, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75)
             # Apply Dropout
             #norm1 = tf.nn.dropout(norm1, _dropout)
- 
+
             # Convolution Layer 2
             conv2 = tf.tanh(tf.nn.bias_add(tf.nn.conv2d(norm1, self.hr_conv2_weights, strides=[1, 1, 1, 1], padding='SAME'),self.hr_conv2_biases))
             if(DEBUG == True): print("SHAPE conv2: " + str(conv2.get_shape()))
@@ -410,11 +410,11 @@ class CnnHeadPoseEstimator:
             if(DEBUG == True): print("SHAPE out: " + str(out.get_shape()))
 
             return out
- 
+
         # Get the result from the model
         self.cnn_roll_output = model(self.tf_roll_input_vector)
 
- 
+
     def load_pitch_variables(self, pitchFilePath):
         """ Load varibles from a tensorflow file
 
@@ -497,7 +497,7 @@ class CnnHeadPoseEstimator:
              image_resized = cv2.resize(image, (64, 64), interpolation = cv2.INTER_AREA)
              image_normalised = np.add(image_resized, -127) #normalisation of the input
              feed_dict = {self.tf_pitch_input_vector : image_normalised}
-             pitch_raw = self._sess.run([self.cnn_pitch_output], feed_dict=feed_dict)       
+             pitch_raw = self._sess.run([self.cnn_pitch_output], feed_dict=feed_dict)
              pitch_vector = np.multiply(pitch_raw, 45.0) #cnn-out is in range [-1, +1] --> [-45, + 45]
              if(radians==True): return np.multiply(pitch_vector, np.pi/180.0) #to radians
              else: return pitch_vector
@@ -533,11 +533,11 @@ class CnnHeadPoseEstimator:
              image_resized = cv2.resize(image, (64, 64), interpolation = cv2.INTER_AREA)
              image_normalised = np.add(image_resized, -127) #normalisation of the input
              feed_dict = {self.tf_roll_input_vector : image_normalised}
-             roll_raw = self._sess.run([self.cnn_roll_output], feed_dict=feed_dict)       
+             roll_raw = self._sess.run([self.cnn_roll_output], feed_dict=feed_dict)
              roll_vector = np.multiply(roll_raw, 25.0) #cnn-out is in range [-1, +1] --> [-45, + 45]
              if(radians==True): return np.multiply(roll_vector, np.pi/180.0) #to radians
              else: return roll_vector
-         #wrong shape          
+         #wrong shape
          if(h != w or w<64 or h<64):
              raise ValueError('[DEEPGAZE] CnnHeadPoseEstimator(return_roll): the image given as input has wrong shape. Height and Width must be >= 64 pixel')
          #wrong number of channels
@@ -694,9 +694,9 @@ class PnpHeadPoseEstimator:
          #rvec - Output rotation vector that, together with tvec, brings 
          #points from the world coordinate system to the camera coordinate system.
          #tvec - Output translation vector. It is the position of the world origin (SELLION) in camera co-ords
-         retval, rvec, tvec = cv2.solvePnP(landmarks_3D, 
-                                           landmarks_2D, 
-                                           self.camera_matrix, 
+         retval, rvec, tvec = cv2.solvePnP(landmarks_3D,
+                                           landmarks_2D,
+                                           self.camera_matrix,
                                            self.camera_distortion)
 
          #Get as input the rotational vector
@@ -719,14 +719,14 @@ class PnpHeadPoseEstimator:
     # The result is the same as MATLAB except the order
     # of the euler angles ( x and z are swapped ).
     def rotationMatrixToEulerAngles(self, R) :
- 
+
         #assert(isRotationMatrix(R))
      
         #To prevent the Gimbal Lock it is possible to use
         #a threshold of 1e-6 for discrimination
-        sy = math.sqrt(R[0,0] * R[0,0] +  R[1,0] * R[1,0])    
+        sy = math.sqrt(R[0,0] * R[0,0] +  R[1,0] * R[1,0])
         singular = sy < 1e-6
- 
+
         if  not singular :
             x = math.atan2(R[2,1] , R[2,2])
             y = math.atan2(-R[2,0], sy)
@@ -735,7 +735,7 @@ class PnpHeadPoseEstimator:
             x = math.atan2(-R[1,2], R[1,1])
             y = math.atan2(-R[2,0], sy)
             z = 0
- 
+
         return np.array([x, y, z])
 
 

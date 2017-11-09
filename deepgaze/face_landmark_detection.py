@@ -32,7 +32,7 @@ class faceLandmarkDetection:
     def __init__(self, landmarkPath):
         #Check if the file provided exist
         if(os.path.isfile(landmarkPath)==False):
-            raise ValueError('haarCascade: the files specified do not exist.') 
+            raise ValueError('haarCascade: the files specified do not exist.')
 
         self._predictor = dlib.shape_predictor(landmarkPath)
 
