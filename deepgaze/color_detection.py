@@ -234,7 +234,7 @@ class RangeColorDetector:
 
     def getRange(self):
         """Return the min and max range used in the skin detector
- 
+
         """
         return (self.min_range, self.max_range)
 
@@ -250,7 +250,7 @@ class RangeColorDetector:
         """
         frame_filtered = self.returnMask(frame, morph_opening=morph_opening, blur=blur, kernel_size=kernel_size, iterations=iterations)
         #bitwiseAND mask
-	frame_denoised = cv2.bitwise_and(frame, frame, mask = frame_filtered)
+        frame_denoised = cv2.bitwise_and(frame, frame, mask = frame_filtered)
         return frame_denoised
 
     def returnMask(self, frame, morph_opening=True, blur=True, kernel_size=5, iterations=1):

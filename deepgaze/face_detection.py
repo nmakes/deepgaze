@@ -153,8 +153,8 @@ class HaarFaceDetector:
                     return (self.face_x, self.face_y, self.face_w, self.face_h)
 
         #It returns zeros if nothing is found
-        self.face_type = 0    
-        self.is_face_present = False 
+        self.face_type = 0
+        self.is_face_present = False
         return (0, 0, 0, 0)
 
     def returnMultipleFacesPosition(self, inputImg,
@@ -272,7 +272,7 @@ class HaarFaceDetector:
              self.face_w = faces[max_index][2]
              self.face_h = faces[max_index][3]
              self.is_face_present = True
-             return (faces[max_index][0], faces[max_index][1], faces[max_index][2], faces[max_index][3])            
+             return (faces[max_index][0], faces[max_index][1], faces[max_index][2], faces[max_index][3])
 
          
     def _findProfileFace(self, inputImg, scaleFactor=1.1, minSizeX=30, minSizeY=30, minNeighbors=4):
@@ -298,7 +298,7 @@ class HaarFaceDetector:
             self.is_face_present = False
             return (0, 0, 0, 0)
 
-        if(len(faces) == 1): 
+        if(len(faces) == 1):
             self.face_x = faces[0][0]
             self.face_y = faces[0][1]
             self.face_w = faces[0][2]
@@ -310,7 +310,7 @@ class HaarFaceDetector:
         # it returns the position of
         # the one with the bigger area.
         if(len(faces) > 1):
-             area_list = list()      
+             area_list = list()
              for x,y,h,w in faces:
                  area_list.append(w*h)
              max_index = area_list.index(max(area_list)) #return the index of max element
