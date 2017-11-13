@@ -30,7 +30,7 @@ class DiffMotionDetector:
 
     def setBackground(self, frame):
         """Set the BGR image used as template during the pixel selection
- 
+
         The template can be a spedific region of interest of the main
         frame or a representative color scheme to identify. the template
         is internally stored as an HSV image.
@@ -41,7 +41,7 @@ class DiffMotionDetector:
 
     def getBackground(self):
         """Get the BGR image used as template during the pixel selection
- 
+
         The template can be a spedific region of interest of the main
         frame or a representative color scheme to identify.
         """
@@ -52,14 +52,15 @@ class DiffMotionDetector:
 
     def returnMask(self, foreground_image, threshold=25):
         """Return the binary image after the detection process
- 
+
         @param foreground_image the frame to check
         @param threshold the value used for filtering the pixels after the absdiff
         """
-        if(foreground_image is None): return None
+        if(foreground_image is None):
+            return None
         foreground_gray = cv2.cvtColor(foreground_image, cv2.COLOR_BGR2GRAY)
         delta_image = cv2.absdiff(self.background_gray, foreground_gray)
-	threshold_image = cv2.threshold(delta_image, threshold, 255, cv2.THRESH_BINARY)[1]
+        threshold_image = cv2.threshold(delta_image, threshold, 255, cv2.THRESH_BINARY)[1]
         return threshold_image
 
 
@@ -112,7 +113,7 @@ class MogMotionDetector:
 
     def returnMask(self, foreground_image):
         """Return the binary image after the detection process
- 
+
         @param foreground_image the frame to check
         @param threshold the value used for filtering the pixels after the absdiff
         """
@@ -141,7 +142,7 @@ class Mog2MotionDetector:
 
     def returnMask(self, foreground_image):
         """Return the binary image after the detection process
- 
+
         @param foreground_image the frame to check
         """
         #Since the MOG2 returns shadows with value 127 we have to
@@ -152,10 +153,10 @@ class Mog2MotionDetector:
 
     def returnGreyscaleMask(self, foreground_image):
         """Return the greyscale image after the detection process
- 
+
         The MOG2 can return shadows. The pixels associated with
         shadows have value 127. This mask is not a classic binary
         mask since it incorporates the shadow pixels.
         @param foreground_image the frame to check
         """
-        return self.BackgroundSubtractorMOG2.apply(foreground_image)            
+        return self.BackgroundSubtractorMOG2.apply(foreground_image)
