@@ -77,6 +77,9 @@ This is an updated list of the **main contributors** of the project. **We are lo
 
 Prerequisites
 ------------
+
+The current version of Deepgaze is based on **Python 2.7**, a porting for Python 3.0 has been scheduled for the next year.
+
 To use the libray you have to install:
 
 - Numpy [[link]](http://www.numpy.org/)
@@ -85,7 +88,7 @@ To use the libray you have to install:
 sudo pip install numpy
 ```
 
-- OpenCV [[link]](http://opencv.org/)
+- OpenCV 2.x (not compatible with OpenCV >= 3.x) [[link]](http://opencv.org/)
 
 ```shell
 sudo apt-get install libopencv-dev python-opencv
