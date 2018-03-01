@@ -7,6 +7,11 @@
 #MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
 #CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
 #SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+#In this example the Deepgaze CNN head pose estimator is used to get the YAW angle.
+#The angle is projected on the input images and showed on-screen as a red line.
+#The images are then saved in the same folder of the script.
+
 import numpy as np
 import os
 import tensorflow as tf
@@ -54,13 +59,10 @@ for i in range(1,9):
     c_y = cam_h / 2
     f_x = c_x / np.tan(60/2 * np.pi / 180)
     f_y = f_x
-
     camera_matrix = np.float32([[f_x, 0.0, c_x],
                                 [0.0, f_y, c_y], 
                                 [0.0, 0.0, 1.0] ])
-
     print("Estimated camera matrix: \n" + str(camera_matrix) + "\n")
-
     #Distortion coefficients
     camera_distortion = np.float32([0.0, 0.0, 0.0, 0.0, 0.0])
     #Defining the axes
@@ -79,8 +81,8 @@ for i in range(1,9):
     #Getting rotation and translation vector
     rot_matrix = yaw2rotmat(-yaw[0,0,0]) #Deepgaze use different convention for the Yaw, we have to use the minus sign
 
-    #OpenCV uses a right-handed coordinates system. 
-    #Sitting on camera looking along optical axis, X axis goes right, Y axis goes downward and Z axis goes forward.
+    #Attention: OpenCV uses a right-handed coordinates system:
+    #Looking along optical axis of the camera, X goes right, Y goes downward and Z goes forward.
     rvec, jacobian = cv2.Rodrigues(rot_matrix)
     tvec = np.array([0.0, 0.0, 1.0], np.float) # translation vector
     print rvec
