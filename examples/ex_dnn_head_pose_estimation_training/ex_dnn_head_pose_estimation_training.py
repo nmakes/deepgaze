@@ -132,7 +132,7 @@ with graph.as_default():
     #tf.truncated_normal(shape, mean=0.0, stddev=1.0)
     weights_input0 = tf.Variable(tf.truncated_normal([image_size * image_size, num_hidden_units_1], 0.0, 1.0))    
     weights_hidden1 = tf.Variable(tf.truncated_normal([num_hidden_units_1, num_hidden_units_2], 0.0, 1.0))
-    weights_hidden2 = tf.Variable(tf.truncated_normal([num_hidden_units_2, num_hidden_units_3], 0.0, 1.0)
+    weights_hidden2 = tf.Variable(tf.truncated_normal([num_hidden_units_2, num_hidden_units_3], 0.0, 1.0))
     weights_output3 = tf.Variable(tf.truncated_normal([num_hidden_units_3, num_labels], 0.0, 1.0))    
     
     #2- biases
