@@ -12,6 +12,7 @@
 
 import numpy as np
 import cv2
+import sys
 from timeit import default_timer as timer
 
 DEBUG = False
@@ -132,7 +133,13 @@ class FasaSaliencyMapping:
         """
         L_centroid, A_centroid, B_centroid = np.meshgrid(self.L_range, self.A_range, self.B_range)
         self.unique_pixels = np.zeros((self.number_of_colors, 3))
-        for i in xrange(0, self.number_of_colors):
+        
+        if sys.version_info[0] == 2:
+            color_range = xrange(0, self.number_of_colors)
+        else:
+            color_range = range(0, self.number_of_colors)
+        
+        for i in color_range:
             i_index = self.index_matrix[i, :]
             L_i = L_centroid[i_index[0], i_index[1], i_index[2]]
             A_i = A_centroid[i_index[0], i_index[1], i_index[2]]
