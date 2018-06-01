@@ -146,7 +146,7 @@ class haarCascade:
             scaleFactor=scaleFactor,
             minNeighbors=minNeighbors,
             minSize=(minSizeX, minSizeY),
-            flags=cv2.cv.CV_HAAR_SCALE_IMAGE
+            flags=cv2.CASCADE_SCALE_IMAGE
         )
 
         if(len(faces) == 0):
@@ -183,7 +183,7 @@ class haarCascade:
     ##
     # Find a profile face in the input image
     # @param inputImg the image where the cascade will be called
-    #           
+    #
     def _findProfileFace(self, inputImg, scaleFactor=1.1, minSizeX=30, minSizeY=30, minNeighbors=4):
 
         #Cascade: left profile
@@ -192,7 +192,7 @@ class haarCascade:
             scaleFactor=scaleFactor,
             minNeighbors=minNeighbors,
             minSize=(minSizeX, minSizeY),
-            flags=cv2.cv.CV_HAAR_SCALE_IMAGE
+            flags=cv2.CASCADE_SCALE_IMAGE
         )
 
         if(len(faces) == 0):
