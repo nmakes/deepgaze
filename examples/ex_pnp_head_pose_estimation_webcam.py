@@ -121,9 +121,9 @@ def main():
                                   P3D_STOMION])
 
     #Declaring the two classifiers
-    my_cascade = haarCascade("./etc/xml/haarcascade_frontalface_alt.xml", "./etc/xml/haarcascade_profileface.xml")
+    my_cascade = haarCascade("../etc/xml/haarcascade_frontalface_alt.xml", "../etc/xml/haarcascade_profileface.xml")
     #TODO If missing, example file can be retrieved from http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2
-    my_detector = faceLandmarkDetection('./etc/shape_predictor_68_face_landmarks.dat')
+    my_detector = faceLandmarkDetection('../etc/shape_predictor_68_face_landmarks.dat')
 
     #Error counter definition
     no_face_counter = 0
